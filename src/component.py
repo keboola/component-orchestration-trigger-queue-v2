@@ -44,6 +44,9 @@ class Component(ComponentBase):
             except QueueApiClientException as api_exc:
                 raise UserException(api_exc) from api_exc
             logging.info("Orchestration is finished")
+        else:
+            logging.info("Orchestration is being run. if you require the trigger to wait "
+                         "till the orchestraion is finished, specify this in the configuration")
 
 
 if __name__ == "__main__":
