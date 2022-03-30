@@ -1,85 +1,54 @@
-"""
-Template Component main class.
-
-"""
-import csv
 import logging
-from datetime import datetime
+from client import QueueApiClient, QueueApiClientException
 
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 
-# configuration variables
-KEY_API_TOKEN = '#api_token'
-KEY_PRINT_HELLO = 'print_hello'
+KEY_SAPI_TOKEN = '#kbcToken'
+KEY_STACK = 'kbcUrl'
+KEY_ORCHESTRATION_ID = "orchestrationId"
+KEY_WAIT_UNTIL_FINISH = "waitUntilFinish"
 
-# list of mandatory parameters => if some is missing,
-# component will fail with readable message on initialization.
-REQUIRED_PARAMETERS = [KEY_PRINT_HELLO]
+REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
 
 
 class Component(ComponentBase):
-    """
-        Extends base class for general Python components. Initializes the CommonInterface
-        and performs configuration validation.
-
-        For easier debugging the data folder is picked up by default from `../data` path,
-        relative to working directory.
-
-        If `debug` parameter is present in the `config.json`, the default logger is set to verbose DEBUG mode.
-    """
 
     def __init__(self):
         super().__init__()
 
     def run(self):
-        """
-        Main execution code
-        """
-
-        # ####### EXAMPLE TO REMOVE
-        # check for missing configuration parameters
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         self.validate_image_parameters(REQUIRED_IMAGE_PARS)
         params = self.configuration.parameters
-        # Access parameters in data/config.json
-        if params.get(KEY_PRINT_HELLO):
-            logging.info("Hello World")
 
-        # get last state data/in/state.json from previous run
-        previous_state = self.get_state_file()
-        logging.info(previous_state.get('some_state_parameter'))
+        sapi_token = params.get(KEY_SAPI_TOKEN)
+        stack = params.get(KEY_STACK)
+        orch_id = params.get(KEY_ORCHESTRATION_ID)
 
-        # Create output table (Tabledefinition - just metadata)
-        table = self.create_out_table_definition('output.csv', incremental=True, primary_key=['timestamp'])
+        wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
 
-        # get file path of the table (data/out/tables/Features.csv)
-        out_table_path = table.full_path
-        logging.info(out_table_path)
+        client = QueueApiClient(sapi_token, stack)
+        try:
+            orchestration_run = client.run_orchestration(orch_id)
+        except QueueApiClientException as api_exc:
+            raise UserException(api_exc) from api_exc
 
-        # DO whatever and save into out_table_path
-        with open(table.full_path, mode='wt', encoding='utf-8', newline='') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=['timestamp'])
-            writer.writeheader()
-            writer.writerow({"timestamp": datetime.now().isoformat()})
+        logging.info(f"Orchestration run started with job ID {orchestration_run.get('id')}")
 
-        # Save table manifest (output.csv.manifest) from the tabledefinition
-        self.write_manifest(table)
-
-        # Write new state - will be available next run
-        self.write_state_file({"some_state_parameter": "value"})
-
-        # ####### EXAMPLE TO REMOVE END
+        if wait_until_finish:
+            logging.info("Waiting till orchestration is finished")
+            try:
+                client.wait_until_job_finished(orchestration_run.get('id'))
+            except QueueApiClientException as api_exc:
+                raise UserException(api_exc) from api_exc
+            logging.info("Orchestration is finished")
 
 
-"""
-        Main entrypoint
-"""
 if __name__ == "__main__":
     try:
         comp = Component()
-        # this triggers the run method by default and is controlled by the configuration.action parameter
         comp.execute_action()
     except UserException as exc:
         logging.exception(exc)

@@ -1,57 +1,52 @@
-Orchestration Trigger Queue V2
+Orchestration Trigger app for Queue V2
 =============
 
-Description
+Trigger to start a Keboola Orchestration
+
 
 **Table of contents:**
 
 [TOC]
 
-Functionality notes
-===================
-
 Prerequisites
 =============
 
-Get the API token, register application, etc.
+Get the [Storage API token](https://help.keboola.com/management/project/tokens/)
 
-Features
-========
+Get the orchestration id from the link :  https://connection.keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}
 
-| **Feature**             | **Note**                                      |
-|-------------------------|-----------------------------------------------|
-| Generic UI form         | Dynamic UI form                               |
-| Row Based configuration | Allows structuring the configuration in rows. |
-| oAuth                   | oAuth authentication enabled                  |
-| Incremental loading     | Allows fetching data in new increments.       |
-| Backfill mode           | Support for seamless backfill setup.          |
-| Date range filter       | Specify date range.                           |
-
-Supported endpoints
-===================
-
-If you need more endpoints, please submit your request to
-[ideas.keboola.com](https://ideas.keboola.com/)
 
 Configuration
 =============
 
-Param 1
--------
+##Parameters
+ - KBC Storage API token (#kbcToken) - [REQ] 
+ - KBC Stack (kbcUrl) - [REQ] Specific stack in Keboola "" : Keboola AWS US,  "eu-central-1." : AWS EU, "north-europe.azure." : Azure US
+ - Orchestration ID (orchestrationId) - [REQ] specific ID of orchestration taken from the link
+ - Wait for job finish and check jobs status (waitUntilFinish) - [REQ] if set to true the component will only finish executing once the orchestration it triggered has stopped
 
-Param 2
--------
 
-Output
-======
 
-List of tables, foreign keys, schema.
+
+Sample Configuration
+=============
+```json
+{
+    "parameters": {
+        "#kbcToken": "SECRET_VALUE",
+        "kbcUrl": "",
+        "orchestrationId": "832802120",
+        "waitUntilFinish": true
+    },
+    "action": "run"
+}
+```
 
 Development
 -----------
 
-If required, change local data folder (the `CUSTOM_FOLDER` placeholder) path to
-your custom path in the `docker-compose.yml` file:
+If required, change local data folder (the `CUSTOM_FOLDER` placeholder) path to your custom path in
+the `docker-compose.yml` file:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     volumes:
@@ -59,12 +54,9 @@ your custom path in the `docker-compose.yml` file:
       - ./CUSTOM_FOLDER:/data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Clone this repository, init the workspace and run the component with following
-command:
+Clone this repository, init the workspace and run the component with following command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-git clone https://bitbucket.org/kds_consulting_team/kds-team.app-orchestration-trigger-queue-v2/src/master/ app-orchestration-trigger-queue-v2
-cd app-orchestration-trigger-queue-v2
 docker-compose build
 docker-compose run --rm dev
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,5 +71,4 @@ Integration
 ===========
 
 For information about deployment and integration with KBC, please refer to the
-[deployment section of developers
-documentation](https://developers.keboola.com/extend/component/deployment/)
+[deployment section of developers documentation](https://developers.keboola.com/extend/component/deployment/)

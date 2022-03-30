@@ -1,17 +1,48 @@
 {
   "type": "object",
-  "title": "extractor configuration",
+  "title": "Parameters",
   "required": [
-    "print_hello"
+    "#kbcToken",
+    "kbcUrl",
+    "orchestrationId",
+    "waitUntilFinish"
   ],
   "properties": {
-    "print_hello": {
-      "type": "boolean",
-      "title": "Print Hello"
+    "#kbcToken": {
+      "type": "string",
+      "title": "KBC Storage API token",
+      "format": "password",
+      "minLength": 1,
+      "propertyOrder": 10
     },
-    "debug": {
+    "kbcUrl": {
+      "title": "KBC Stack",
+      "type": "string",
+      "enum": [
+        "",
+        "eu-central-1.",
+        "north-europe.azure."
+      ],
+      "options": {
+        "enum_titles": [
+          "AWS US East - connection.keboola.com",
+          "AWS EU Central - connection.eu-central-1.keboola.com",
+          "Azure North Europe - connection.north-europe.azure.keboola.com"
+        ]
+      },
+      "propertyOrder": 20
+    },
+    "orchestrationId": {
+      "title": "Orchestration ID",
+      "type": "integer",
+      "propertyOrder": 30
+    },
+    "waitUntilFinish": {
       "type": "boolean",
-      "title": "Debug"
+      "format": "checkbox",
+      "title": "Wait for job finish and check jobs status",
+      "default": false,
+      "propertyOrder": 40
     }
   }
 }
