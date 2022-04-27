@@ -1,1 +1,1 @@
-Trigger to start a Keboola Orchestration
+This application allows you to run orchestrations V2 across different Keboola Connection projects.
