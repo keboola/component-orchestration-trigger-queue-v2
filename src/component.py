@@ -18,7 +18,7 @@ class Component(ComponentBase):
     def __init__(self):
         super().__init__()
 
-    def run(self):
+    def run(self) -> None:
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         self.validate_image_parameters(REQUIRED_IMAGE_PARS)
         params = self.configuration.parameters
@@ -29,7 +29,11 @@ class Component(ComponentBase):
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
 
-        client = QueueApiClient(sapi_token, stack)
+        try:
+            client = QueueApiClient(sapi_token, stack)
+        except QueueApiClientException as api_exc:
+            raise UserException(api_exc) from api_exc
+
         try:
             orchestration_run = client.run_orchestration(orch_id)
         except QueueApiClientException as api_exc:
