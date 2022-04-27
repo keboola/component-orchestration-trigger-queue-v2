@@ -14,7 +14,7 @@ Generate a dedicated [Limited Access SAPI Token](https://help.keboola.com/manage
 with restricted access and custom access to the Orchestrator component.
 
 
-Get the orchestration id from the link :  https://connection.keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}
+Get the orchestration id from the link :  ...keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}
 
 Make sure the orchestration you wish to run is an Orchestration V2. 
 

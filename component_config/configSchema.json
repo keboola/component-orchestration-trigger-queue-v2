@@ -13,7 +13,8 @@
       "title": "KBC Storage API token",
       "format": "password",
       "minLength": 1,
-      "propertyOrder": 10
+      "propertyOrder": 10,
+      "Description" : "[Limited Access SAPI Token](https://help.keboola.com/management/project/tokens/#limited-access-to-components) with restricted access and custom access to the Orchestrator component."
     },
     "kbcUrl": {
       "title": "KBC Stack",
@@ -35,7 +36,8 @@
     "orchestrationId": {
       "title": "Orchestration ID",
       "type": "integer",
-      "propertyOrder": 30
+      "propertyOrder": 30,
+      "description" : "Get the orchestration id from the link :  ...keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}"
     },
     "waitUntilFinish": {
       "type": "boolean",
