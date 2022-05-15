@@ -8,6 +8,9 @@ KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
 KEY_ORCHESTRATION_ID = "orchestrationId"
 KEY_WAIT_UNTIL_FINISH = "waitUntilFinish"
+KEY_VARIABLES = "variables"
+KEY_VARIABLE_NAME = "name"
+KEY_VARIABLE_VALUE = "value"
 
 REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
@@ -27,6 +30,8 @@ class Component(ComponentBase):
         stack = params.get(KEY_STACK)
         orch_id = params.get(KEY_ORCHESTRATION_ID)
 
+        variables = params.get(KEY_VARIABLES)
+
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
 
         try:
@@ -35,7 +40,7 @@ class Component(ComponentBase):
             raise UserException(api_exc) from api_exc
 
         try:
-            orchestration_run = client.run_orchestration(orch_id)
+            orchestration_run = client.run_orchestration(orch_id, variables)
         except QueueApiClientException as api_exc:
             raise UserException(api_exc) from api_exc
 

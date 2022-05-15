@@ -14,7 +14,7 @@
       "format": "password",
       "minLength": 1,
       "propertyOrder": 10,
-      "description" : "<a href=\"https://help.keboola.com/management/project/tokens/#limited-access-to-components\">Limited Access SAPI Token</a> with restricted access and custom access to the Orchestrator component."
+      "description": "<a href=\"https://help.keboola.com/management/project/tokens/#limited-access-to-components\">Limited Access SAPI Token</a> with restricted access and custom access to the Orchestrator component."
     },
     "kbcUrl": {
       "title": "KBC Stack",
@@ -37,7 +37,7 @@
       "title": "Orchestration ID",
       "type": "integer",
       "propertyOrder": 30,
-      "description" : "Get the orchestration id from the link :  ...keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}"
+      "description": "Get the orchestration id from the link :  ...keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}"
     },
     "waitUntilFinish": {
       "type": "boolean",
@@ -45,6 +45,25 @@
       "title": "Wait for job finish and check jobs status",
       "default": false,
       "propertyOrder": 40
+    },
+    "variables": {
+      "type": "array",
+      "propertyOrder": 50,
+      "format": "table",
+      "title": "Variables",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "title": "Variable",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

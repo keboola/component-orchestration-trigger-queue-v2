@@ -1,7 +1,7 @@
 import json
 import time
 import requests
-from typing import Dict
+from typing import Dict, Optional, List
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from requests.exceptions import HTTPError
@@ -28,10 +28,12 @@ class QueueApiClient(HttpClient):
             raise QueueApiClientException(
                 f"Invalid stack entered, make sure it is in the list of valid stacks {VALID_STACKS} ")
 
-    def run_orchestration(self, orch_id: str) -> Dict:
+    def run_orchestration(self, orch_id: str, variables: Optional[List[Dict]]) -> Dict:
         data = {"component": "keboola.orchestrator",
                 "mode": "run",
                 "config": orch_id}
+        if variables:
+            data["variableValuesData"] = {"values": variables}
         header = {'Content-Type': 'application/json'}
 
         response = self.post_raw(endpoint_path="jobs", headers=header, data=json.dumps(data))  # noqa
