@@ -8,6 +8,7 @@ from requests.exceptions import HTTPError
 from keboola.http_client import HttpClient
 
 QUEUE_V2_URL = "https://queue.{STACK}keboola.com"
+CLOUD_URL = "https://queue.{STACK}.keboola.cloud"
 VALID_STACKS = ["", "eu-central-1.", "north-europe.azure."]
 
 
@@ -16,10 +17,13 @@ class QueueApiClientException(Exception):
 
 
 class QueueApiClient(HttpClient):
-    def __init__(self, sapi_token: str, keboola_stack: str) -> None:
+    def __init__(self, sapi_token: str, keboola_stack: str, custom_stack: Optional[str]) -> None:
         auth_header = {"X-StorageApi-Token": sapi_token}
-        job_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
-        self.validate_stack(keboola_stack)
+        if keboola_stack == "Custom Stack":
+            job_url = QUEUE_V2_URL.replace("{STACK}", custom_stack)
+        else:
+            job_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
+            self.validate_stack(keboola_stack)
         super().__init__(job_url, auth_header=auth_header)
 
     @staticmethod

@@ -6,6 +6,7 @@ from keboola.component.exceptions import UserException
 
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
+KEY_CUSTOM_STACK = "custom_stack"
 KEY_ORCHESTRATION_ID = "orchestrationId"
 KEY_WAIT_UNTIL_FINISH = "waitUntilFinish"
 KEY_VARIABLES = "variables"
@@ -29,13 +30,14 @@ class Component(ComponentBase):
         sapi_token = params.get(KEY_SAPI_TOKEN)
         stack = params.get(KEY_STACK)
         orch_id = params.get(KEY_ORCHESTRATION_ID)
+        custom_stack = params.get(KEY_CUSTOM_STACK, "")
 
         variables = params.get(KEY_VARIABLES)
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
 
         try:
-            client = QueueApiClient(sapi_token, stack)
+            client = QueueApiClient(sapi_token, stack, custom_stack)
         except QueueApiClientException as api_exc:
             raise UserException(api_exc) from api_exc
 
