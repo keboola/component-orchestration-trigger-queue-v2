@@ -30,7 +30,7 @@ class Component(ComponentBase):
         sapi_token = params.get(KEY_SAPI_TOKEN)
         stack = params.get(KEY_STACK)
         orch_id = params.get(KEY_ORCHESTRATION_ID)
-        custom_stack = params.get(KEY_CUSTOM_STACK,"")
+        custom_stack = params.get(KEY_CUSTOM_STACK, "")
 
         variables = params.get(KEY_VARIABLES)
 
