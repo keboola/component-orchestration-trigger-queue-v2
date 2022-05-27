@@ -22,16 +22,29 @@
       "enum": [
         "",
         "eu-central-1.",
-        "north-europe.azure."
+        "north-europe.azure.",
+        "Custom Stack"
       ],
       "options": {
         "enum_titles": [
           "AWS US East - connection.keboola.com",
           "AWS EU Central - connection.eu-central-1.keboola.com",
-          "Azure North Europe - connection.north-europe.azure.keboola.com"
+          "Azure North Europe - connection.north-europe.azure.keboola.com",
+          "Custom Stack"
         ]
       },
       "propertyOrder": 20
+    },
+    "custom_stack": {
+      "title": "Custom Stack",
+      "type": "string",
+      "propertyOrder": 25,
+      "description": "The name of your stack in connection.{CUSTOM_STACK}.keboola.cloud",
+      "options": {
+        "dependencies": {
+          "kbcUrl": "Custom Stack"
+        }
+      }
     },
     "orchestrationId": {
       "title": "Orchestration ID",
