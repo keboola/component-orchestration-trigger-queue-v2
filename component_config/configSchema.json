@@ -59,6 +59,14 @@
       "default": false,
       "propertyOrder": 40
     },
+    "failOnWarning": {
+      "type": "boolean",
+      "format": "checkbox",
+      "title": "Fail on Warning",
+      "default": true,
+      "propertyOrder": 45,
+      "description" : "When checked, the trigger job will fail when the orchestration ends with a warning"
+    },
     "variables": {
       "type": "array",
       "propertyOrder": 50,

@@ -12,6 +12,7 @@ KEY_WAIT_UNTIL_FINISH = "waitUntilFinish"
 KEY_VARIABLES = "variables"
 KEY_VARIABLE_NAME = "name"
 KEY_VARIABLE_VALUE = "value"
+KEY_FAIL_ON_WARNING = "failOnWarning"
 
 REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
@@ -35,6 +36,7 @@ class Component(ComponentBase):
         variables = params.get(KEY_VARIABLES)
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
+        fail_on_warning = params.get(KEY_FAIL_ON_WARNING, True)
 
         try:
             client = QueueApiClient(sapi_token, stack, custom_stack)
@@ -51,13 +53,21 @@ class Component(ComponentBase):
         if wait_until_finish:
             logging.info("Waiting till orchestration is finished")
             try:
-                client.wait_until_job_finished(orchestration_run.get('id'))
+                status = client.wait_until_job_finished(orchestration_run.get('id'))
             except QueueApiClientException as api_exc:
                 raise UserException(api_exc) from api_exc
             logging.info("Orchestration is finished")
+            self.process_status(status, fail_on_warning)
         else:
             logging.info("Orchestration is being run. if you require the trigger to wait "
                          "till the orchestraion is finished, specify this in the configuration")
+
+    @staticmethod
+    def process_status(status: str, fail_on_warning: bool) -> None:
+        if not fail_on_warning and status.lower() == "warning":
+            logging.warning("Orchestration ended in a warning")
+        elif status.lower() != "success":
+            raise UserException(f"Orchestration did not end in success, ended in {status}")
 
 
 if __name__ == "__main__":

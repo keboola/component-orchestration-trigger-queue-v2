@@ -35,7 +35,8 @@ Configuration
  - KBC Storage API token (#kbcToken) - [REQ] SAPI token with restricted access and custom access to the Orchestrator component
  - KBC Stack (kbcUrl) - [REQ] Specific stack in Keboola "" : Keboola AWS US,  "eu-central-1." : AWS EU, "north-europe.azure." : Azure US
  - Orchestration ID (orchestrationId) - [REQ] specific ID of orchestration taken from the link
- - Wait for job finish and check jobs status (waitUntilFinish) - [REQ] if set to true the component will only finish executing once the orchestration it triggered has stopped
+ - Wait for job finish and check jobs status (waitUntilFinish) - [REQ] if set to true the component will only finish executing once the orchestration it triggered has stopped, if the orchestration ends in failure, then the tirgger job fails as well
+ - Fail on warning (failOnWarning) - [OPT] if set to true, the component will fail when the status of the orchestration ends with a warning.
 
 
 
