@@ -65,7 +65,12 @@
       "title": "Fail on Warning",
       "default": true,
       "propertyOrder": 45,
-      "description" : "When checked, the trigger job will fail when the orchestration ends with a warning"
+      "description" : "When checked, the trigger job will fail when the orchestration ends with a warning",
+      "options": {
+        "dependencies": {
+          "waitUntilFinish": true
+        }
+      }
     },
     "variables": {
       "type": "array",
