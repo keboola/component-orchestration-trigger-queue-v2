@@ -10,8 +10,10 @@ Trigger to start a Keboola Orchestration V2.
 Prerequisites
 ============
 
-Generate a dedicated [Limited Access SAPI Token](https://help.keboola.com/management/project/tokens/#limited-access-to-components) 
-with restricted access and custom access to the Orchestrator component.
+There are two options with tokens that you can choose:
+ 
+* Create an API token with Full access to all buckets and components.
+* Create a [Limited Access SAPI Token](https://help.keboola.com/management/project/tokens/#limited-access-to-components) with access to the Flow, and every single component in the flow and the buckets those components interact with
 
 
 Get the orchestration id from the link :  ...keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}
@@ -32,7 +34,7 @@ Configuration
 =============
 
 ##Parameters
- - KBC Storage API token (#kbcToken) - [REQ] SAPI token with restricted access and custom access to the Orchestrator component
+ - KBC Storage API token (#kbcToken) - [REQ] API token with full access to all buckets and components including buckets created in the future
  - KBC Stack (kbcUrl) - [REQ] Specific stack in Keboola "" : Keboola AWS US,  "eu-central-1." : AWS EU, "north-europe.azure." : Azure US
  - Orchestration ID (orchestrationId) - [REQ] specific ID of orchestration taken from the link
  - Wait for job finish and check jobs status (waitUntilFinish) - [REQ] if set to true the component will only finish executing once the orchestration it triggered has stopped, if the orchestration ends in failure, then the tirgger job fails as well

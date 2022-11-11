@@ -14,7 +14,7 @@
       "format": "password",
       "minLength": 1,
       "propertyOrder": 10,
-      "description": "<a href=\"https://help.keboola.com/management/project/tokens/#limited-access-to-components\">Limited Access SAPI Token</a> with restricted access and custom access to the Orchestrator component."
+      "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
     },
     "kbcUrl": {
       "title": "KBC Stack",
