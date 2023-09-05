@@ -60,7 +60,7 @@
       },
       "uniqueItems": true
     },
-    "orchestration_metadata": {
+    "trigger_metadata": {
       "type": "object",
       "format": "grid-strict",
       "title": "Trigger Info",

@@ -8,6 +8,8 @@ from keboola.component.sync_actions import SelectElement
 
 from client import QueueApiClient, QueueApiClientException
 
+COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
+
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
 KEY_CUSTOM_STACK = "custom_stack"
@@ -107,6 +109,26 @@ class Component(ComponentBase):
         self._init_clients()
         configurations = self._configurations_client.list('keboola.orchestrator')
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=int(c['id'])) for c in configurations]
+
+    @sync_action('sync_trigger_metadata')
+    def sync_trigger_metadata(self):
+        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+        params = self.configuration.parameters
+        self._init_clients()
+        orch_id = params.get(KEY_ORCHESTRATION_ID)
+        stack = params.get(KEY_STACK)
+        custom_stack = params.get(KEY_CUSTOM_STACK, "")
+        token = self.environment_variables.token
+        config_id = self.environment_variables.config_id
+        stack_url = get_stack_url(stack, custom_stack)
+        client = Configurations(stack_url, token, self.environment_variables.branch_id)
+
+        current_cfg = client.detail(COMPONENT_ID, config_id)
+        current_cfg['configuration']['trigger_metadata']['project_name'] = self.environment_variables.project_name
+        current_cfg['configuration']['trigger_metadata']['project_id'] = self._get_project_id()
+
+        orchestration_url = f"{stack_url}/admin/projects/{self._get_project_id()}/flows/{orch_id}"
+        current_cfg['configuration']['trigger_metadata']['orchestration_link'] = orchestration_url
 
     def _get_project_id(self) -> str:
         return self.configuration.parameters.get(KEY_SAPI_TOKEN, '').split('-')[0]
