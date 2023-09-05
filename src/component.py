@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+import requests
 from kbcstorage.configurations import Configurations
 from keboola.component.base import ComponentBase, sync_action
 from keboola.component.exceptions import UserException
@@ -8,7 +9,7 @@ from keboola.component.sync_actions import SelectElement
 
 from client import QueueApiClient, QueueApiClientException
 
-COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
+CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
 
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
@@ -98,6 +99,57 @@ class Component(ComponentBase):
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
 
     @staticmethod
+    def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
+                      state=None, changeDescription='', branch_id=None, is_disabled=False, **kwargs):
+        """
+        Update table from CSV file.
+
+        Args:
+            token: storage token
+            component_id (str):
+            name (str): The new table name (only alphanumeric and underscores)
+            configuration (dict): configuration JSON; the maximum allowed size is 4MB
+            state (dict): configuration JSON; the maximum allowed size is 4MB
+            changeDescription (str): Escape character used in the CSV file.
+            stack_url:
+            is_disabled:
+
+        Returns:
+            table_id (str): Id of the created table.
+
+        Raises:
+            requests.HTTPError: If the API request fails.
+        """
+
+        if not branch_id:
+            url = f'{stack_url}/v2/storage/components/{component_id}/configs/{configurationId}'
+        else:
+            url = f'{stack_url}/v2/storage/branch/{branch_id}/components/{component_id}/configs/{configurationId}'
+
+        parameters = {}
+
+        parameters['configurationId'] = configurationId
+        if configuration:
+            parameters['configuration'] = configuration
+        parameters['name'] = name
+
+        if description is not None:
+            parameters['description'] = description
+        parameters['changeDescription'] = changeDescription
+        parameters['isDisabled'] = is_disabled
+        headers = {'Content-Type': 'application/json', 'X-StorageApi-Token': token}
+        response = requests.put(url,
+                                json=parameters,
+                                headers=headers)
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            raise e
+        else:
+            return response.json()
+
+    @staticmethod
     def process_status(status: str, fail_on_warning: bool) -> None:
         if not fail_on_warning and status.lower() == "warning":
             logging.warning("Orchestration ended in a warning")
@@ -123,12 +175,18 @@ class Component(ComponentBase):
         stack_url = get_stack_url(stack, custom_stack)
         client = Configurations(stack_url, token, self.environment_variables.branch_id)
 
-        current_cfg = client.detail(COMPONENT_ID, config_id)
-        current_cfg['configuration']['trigger_metadata']['project_name'] = self.environment_variables.project_name
-        current_cfg['configuration']['trigger_metadata']['project_id'] = self._get_project_id()
+        current_cfg = client.detail(CURRENT_COMPONENT_ID, config_id)
+
+        current_cfg['configuration']['parameters']['trigger_metadata'] = {}
+        current_cfg['configuration']['parameters']['trigger_metadata'][
+            'project_name'] = self.environment_variables.project_name
+        current_cfg['configuration']['parameters']['trigger_metadata']['project_id'] = self._get_project_id()
 
         orchestration_url = f"{stack_url}/admin/projects/{self._get_project_id()}/flows/{orch_id}"
-        current_cfg['configuration']['trigger_metadata']['orchestration_link'] = orchestration_url
+        current_cfg['configuration']['parameters']['trigger_metadata']['orchestration_link'] = orchestration_url
+
+        self.update_config(token, stack_url, CURRENT_COMPONENT_ID, config_id, current_cfg['name'],
+                           configuration=current_cfg['configuration'], changeDescription='Update Trigger Metadata')
 
     def _get_project_id(self) -> str:
         return self.configuration.parameters.get(KEY_SAPI_TOKEN, '').split('-')[0]

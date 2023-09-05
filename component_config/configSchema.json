@@ -91,7 +91,6 @@
           "options": {
             "grid_columns": 12
           },
-          "default": "123",
           "propertyOrder": 5
         },
         "sync_trigger_metadata": {
