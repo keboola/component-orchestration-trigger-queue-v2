@@ -47,10 +47,65 @@
       }
     },
     "orchestrationId": {
-      "title": "Orchestration ID",
       "type": "integer",
+      "title": "Orchestration ID",
       "propertyOrder": 30,
-      "description": "Get the orchestration id from the link :  ...keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}"
+      "enum": [],
+      "format": "select",
+      "options": {
+        "async": {
+          "label": "Re-load orchestrations",
+          "action": "list_orchestrations"
+        }
+      },
+      "uniqueItems": true
+    },
+    "orchestration_metadata": {
+      "type": "object",
+      "format": "grid-strict",
+      "title": "Trigger Info",
+      "properties": {
+        "project_name": {
+          "title": "Project Name",
+          "type": "string",
+          "readOnly": true,
+          "propertyOrder": 1,
+          "options": {
+            "grid_columns": 10
+          },
+          "enabled": false
+        },
+        "project_id": {
+          "title": "Project ID",
+          "readOnly": true,
+          "propertyOrder": 3,
+          "options": {
+            "grid_columns": 2
+          },
+          "type": "string"
+        },
+        "orchestration_link": {
+          "title": "Orchestration link",
+          "readOnly": true,
+          "type": "string",
+          "options": {
+            "grid_columns": 12
+          },
+          "default": "123",
+          "propertyOrder": 5
+        },
+        "sync_trigger_metadata": {
+          "type": "button",
+          "format": "sync-action",
+          "options": {
+            "async": {
+              "label": "Refresh",
+              "action": "sync_trigger_metadata"
+            }
+          },
+          "propertyOrder": 10
+        }
+      }
     },
     "waitUntilFinish": {
       "type": "boolean",
@@ -65,7 +120,7 @@
       "title": "Fail on Warning",
       "default": true,
       "propertyOrder": 45,
-      "description" : "When checked, the trigger job will fail when the orchestration ends with a warning",
+      "description": "When checked, the trigger job will fail when the orchestration ends with a warning",
       "options": {
         "dependencies": {
           "waitUntilFinish": true

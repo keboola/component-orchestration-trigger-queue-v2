@@ -1,11 +1,12 @@
 import json
 import time
-import requests
 from typing import Dict, Optional, List
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-from requests.exceptions import HTTPError
+
+import requests
 from keboola.http_client import HttpClient
+from requests.adapters import HTTPAdapter
+from requests.exceptions import HTTPError
+from requests.packages.urllib3.util.retry import Retry
 
 QUEUE_V2_URL = "https://queue.{STACK}keboola.com"
 CLOUD_URL = "https://queue.{STACK}.keboola.cloud"
@@ -19,12 +20,17 @@ class QueueApiClientException(Exception):
 class QueueApiClient(HttpClient):
     def __init__(self, sapi_token: str, keboola_stack: str, custom_stack: Optional[str]) -> None:
         auth_header = {"X-StorageApi-Token": sapi_token}
-        if keboola_stack == "Custom Stack":
-            job_url = CLOUD_URL.replace("{STACK}", custom_stack)
-        else:
-            job_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
-            self.validate_stack(keboola_stack)
+        job_url = self.get_stack_url(keboola_stack, custom_stack)
         super().__init__(job_url, auth_header=auth_header)
+
+    @staticmethod
+    def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
+        if keboola_stack == "Custom Stack":
+            stack_url = CLOUD_URL.replace("{STACK}", custom_stack)
+        else:
+            stack_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
+            QueueApiClient.validate_stack(keboola_stack)
+        return stack_url
 
     @staticmethod
     def validate_stack(stack: str) -> None:
