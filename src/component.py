@@ -55,6 +55,9 @@ class Component(ComponentBase):
         orch_id = params.get(KEY_ORCHESTRATION_ID)
 
         variables = params.get(KEY_VARIABLES)
+        if any(v['name'] == '' for v in variables):
+            raise UserException("There is a variable with empty name in the configuration. "
+                                "Please provide a valid name or remove the variable row.")
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
         fail_on_warning = params.get(KEY_FAIL_ON_WARNING, True)
