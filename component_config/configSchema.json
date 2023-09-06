@@ -64,45 +64,64 @@
       "type": "object",
       "format": "grid-strict",
       "title": "Trigger Info",
+      "options": {
+            "tooltip": "Display metadata about the trigger. You may optionally save the results in the configuration for better convenience."
+          },
       "properties": {
-        "project_name": {
-          "title": "Project Name",
-          "type": "string",
-          "readOnly": true,
-          "propertyOrder": 1,
-          "options": {
-            "grid_columns": 10
-          },
-          "enabled": false
-        },
-        "project_id": {
-          "title": "Project ID",
-          "readOnly": true,
-          "propertyOrder": 3,
-          "options": {
-            "grid_columns": 2
-          },
-          "type": "string"
-        },
-        "orchestration_link": {
-          "title": "Orchestration link",
-          "readOnly": true,
-          "type": "string",
-          "options": {
-            "grid_columns": 12
-          },
-          "propertyOrder": 5
-        },
         "sync_trigger_metadata": {
           "type": "button",
           "format": "sync-action",
           "options": {
             "async": {
-              "label": "Refresh",
+              "label": "SHOW INFO",
               "action": "sync_trigger_metadata"
             }
           },
-          "propertyOrder": 10
+          "propertyOrder": 1
+        },
+        "store_info": {
+          "title": "Store Metadata in configuration",
+          "type": "boolean",
+          "format": "checkbox",
+          "propertyOrder": 2,
+          "options": {
+            "grid_columns": 10,
+            "grid_break": true
+          }
+        },
+        "project_name": {
+          "title": "Project Name",
+          "type": "string",
+          "propertyOrder": 3,
+          "options": {
+            "grid_columns": 10,
+            "dependencies": {
+              "store_info": true
+            }
+          },
+          "enabled": false
+        },
+        "project_id": {
+          "title": "Project ID",
+          "propertyOrder": 4,
+          "options": {
+            "grid_columns": 2,
+            "dependencies": {
+              "store_info": true
+            }
+          },
+          "type": "string"
+        },
+        "orchestration_link": {
+          "title": "Orchestration link",
+          "type": "string",
+          "options": {
+            "grid_columns": 12,
+            "dependencies": {
+              "store_info": true
+            }
+          },
+          "propertyOrder": 5
         }
       }
     },

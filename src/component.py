@@ -5,7 +5,7 @@ import requests
 from kbcstorage.configurations import Configurations
 from keboola.component.base import ComponentBase, sync_action
 from keboola.component.exceptions import UserException
-from keboola.component.sync_actions import SelectElement
+from keboola.component.sync_actions import SelectElement, ValidationResult
 
 from client import QueueApiClient, QueueApiClientException
 
@@ -170,23 +170,34 @@ class Component(ComponentBase):
         orch_id = params.get(KEY_ORCHESTRATION_ID)
         stack = params.get(KEY_STACK)
         custom_stack = params.get(KEY_CUSTOM_STACK, "")
-        token = self.environment_variables.token
-        config_id = self.environment_variables.config_id
+        # token = self.environment_variables.token
+        # config_id = self.environment_variables.config_id
         stack_url = get_stack_url(stack, custom_stack)
-        client = Configurations(stack_url, token, self.environment_variables.branch_id)
-
-        current_cfg = client.detail(CURRENT_COMPONENT_ID, config_id)
-
-        current_cfg['configuration']['parameters']['trigger_metadata'] = {}
-        current_cfg['configuration']['parameters']['trigger_metadata'][
-            'project_name'] = self.environment_variables.project_name
-        current_cfg['configuration']['parameters']['trigger_metadata']['project_id'] = self._get_project_id()
-
         orchestration_url = f"{stack_url}/admin/projects/{self._get_project_id()}/flows/{orch_id}"
-        current_cfg['configuration']['parameters']['trigger_metadata']['orchestration_link'] = orchestration_url
+        orchestration_cfg = self._configurations_client.detail('keboola.orchestrator', str(orch_id))
 
-        self.update_config(token, stack_url, CURRENT_COMPONENT_ID, config_id, current_cfg['name'],
-                           configuration=current_cfg['configuration'], changeDescription='Update Trigger Metadata')
+        # TODO: enable when UI forwards ConfigID
+        # client = Configurations(stack_url, token, self.environment_variables.branch_id)
+
+        # current_cfg = client.detail(CURRENT_COMPONENT_ID, config_id)
+        #
+        # current_cfg['configuration']['parameters']['trigger_metadata'] = {}
+        # current_cfg['configuration']['parameters']['trigger_metadata'][
+        #     'project_name'] = self.environment_variables.project_name
+        # current_cfg['configuration']['parameters']['trigger_metadata']['project_id'] = self._get_project_id()
+        #
+        # current_cfg['configuration']['parameters']['trigger_metadata']['orchestration_link'] = orchestration_url
+        #
+        # self.update_config(token, stack_url, CURRENT_COMPONENT_ID, config_id, current_cfg['name'],
+        #                    configuration=current_cfg['configuration'], changeDescription='Update Trigger Metadata')
+
+        info_message = f"""
+- **Project Name:**       `{self.environment_variables.project_name}`
+- **Project ID:**         `{self._get_project_id()}`
+- **Orchestration Name:** `{orchestration_cfg['name']}`
+- **Orchestration Link:** [{orchestration_url}]({orchestration_url})
+        """
+        return ValidationResult(info_message)
 
     def _get_project_id(self) -> str:
         return self.configuration.parameters.get(KEY_SAPI_TOKEN, '').split('-')[0]
