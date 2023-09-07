@@ -47,10 +47,83 @@
       }
     },
     "orchestrationId": {
-      "title": "Orchestration ID",
       "type": "integer",
+      "title": "Orchestration ID",
       "propertyOrder": 30,
-      "description": "Get the orchestration id from the link :  ...keboola.com/admin/projects/{PROJECT_ID}/orchestrations-v2/{ORCHESTRATION_ID}"
+      "enum": [],
+      "format": "select",
+      "options": {
+        "async": {
+          "label": "Re-load orchestrations",
+          "action": "list_orchestrations"
+        }
+      },
+      "uniqueItems": true
+    },
+    "trigger_metadata": {
+      "type": "object",
+      "format": "grid-strict",
+      "title": "Trigger Info",
+      "options": {
+            "tooltip": "Display metadata about the trigger. You may optionally save the results in the configuration for better convenience."
+          },
+      "properties": {
+        "sync_trigger_metadata": {
+          "type": "button",
+          "format": "sync-action",
+          "options": {
+            "async": {
+              "label": "SHOW INFO",
+              "action": "sync_trigger_metadata"
+            }
+          },
+          "propertyOrder": 1
+        },
+        "store_info": {
+          "title": "Store Metadata in configuration",
+          "type": "boolean",
+          "format": "checkbox",
+          "propertyOrder": 2,
+          "options": {
+            "grid_columns": 10,
+            "grid_break": true
+          }
+        },
+        "project_name": {
+          "title": "Project Name",
+          "type": "string",
+          "propertyOrder": 3,
+          "options": {
+            "grid_columns": 10,
+            "dependencies": {
+              "store_info": true
+            }
+          },
+          "enabled": false
+        },
+        "project_id": {
+          "title": "Project ID",
+          "propertyOrder": 4,
+          "options": {
+            "grid_columns": 2,
+            "dependencies": {
+              "store_info": true
+            }
+          },
+          "type": "string"
+        },
+        "orchestration_link": {
+          "title": "Orchestration link",
+          "type": "string",
+          "options": {
+            "grid_columns": 12,
+            "dependencies": {
+              "store_info": true
+            }
+          },
+          "propertyOrder": 5
+        }
+      }
     },
     "waitUntilFinish": {
       "type": "boolean",
@@ -65,7 +138,7 @@
       "title": "Fail on Warning",
       "default": true,
       "propertyOrder": 45,
-      "description" : "When checked, the trigger job will fail when the orchestration ends with a warning",
+      "description": "When checked, the trigger job will fail when the orchestration ends with a warning",
       "options": {
         "dependencies": {
           "waitUntilFinish": true
