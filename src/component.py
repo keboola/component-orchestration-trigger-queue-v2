@@ -24,8 +24,8 @@ KEY_FAIL_ON_WARNING = "failOnWarning"
 REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
 
-STACK_URL = "https://connection{STACK}.keboola.com"
-CLOUD_STACK_URL = "https://connection{STACK}.keboola.cloud"
+STACK_URL = "https://connection.{STACK}keboola.com"
+CLOUD_STACK_URL = "https://connection.{STACK}keboola.cloud"
 VALID_STACKS = ["", "eu-central-1.", "north-europe.azure."]
 
 
