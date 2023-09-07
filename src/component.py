@@ -54,7 +54,7 @@ class Component(ComponentBase):
 
         orch_id = params.get(KEY_ORCHESTRATION_ID)
 
-        variables = params.get(KEY_VARIABLES)
+        variables = params.get(KEY_VARIABLES, [])
         if any(v['name'] == '' for v in variables):
             raise UserException("There is a variable with empty name in the configuration. "
                                 "Please provide a valid name or remove the variable row.")
