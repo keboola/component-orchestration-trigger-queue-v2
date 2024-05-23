@@ -23,6 +23,8 @@
         "",
         "eu-central-1.",
         "north-europe.azure.",
+        "us-east4.gcp.",
+        "europe-west3.gcp.",
         "Custom Stack"
       ],
       "options": {
@@ -30,6 +32,8 @@
           "AWS US East - connection.keboola.com",
           "AWS EU Central - connection.eu-central-1.keboola.com",
           "Azure North Europe - connection.north-europe.azure.keboola.com",
+          "US Virginia GCP - connection.us-east4.gcp.keboola.com",
+          "EU Frankfurt GCP - connection.europe-west3.gcp.keboola.com",
           "Custom Stack"
         ]
       },
