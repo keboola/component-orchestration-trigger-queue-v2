@@ -10,7 +10,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 QUEUE_V2_URL = "https://queue.{STACK}keboola.com"
 CLOUD_URL = "https://queue.{STACK}.keboola.cloud"
-VALID_STACKS = ["", "eu-central-1.", "north-europe.azure."]
+VALID_STACKS = ["", "eu-central-1.", "north-europe.azure.", "us-east4.gcp.", "europe-west3.gcp."]
 
 
 class QueueApiClientException(Exception):
