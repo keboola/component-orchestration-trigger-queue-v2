@@ -26,7 +26,7 @@ REQUIRED_IMAGE_PARS = []
 
 STACK_URL = "https://connection.{STACK}keboola.com"
 CLOUD_STACK_URL = "https://connection.{STACK}.keboola.cloud"
-VALID_STACKS = ["", "eu-central-1.", "north-europe.azure."]
+VALID_STACKS = ["", "eu-central-1.", "north-europe.azure.", "us-east4.gcp.", "europe-west3.gcp."]
 
 
 def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
