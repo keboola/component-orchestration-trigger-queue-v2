@@ -10,7 +10,6 @@ from requests.packages.urllib3.util.retry import Retry
 
 QUEUE_V2_URL = "https://queue.{STACK}keboola.com"
 CLOUD_URL = "https://queue.{STACK}.keboola.cloud"
-VALID_STACKS = ["", "eu-central-1.", "north-europe.azure.", "us-east4.gcp.", "europe-west3.gcp."]
 
 
 class QueueApiClientException(Exception):
@@ -29,14 +28,7 @@ class QueueApiClient(HttpClient):
             stack_url = CLOUD_URL.replace("{STACK}", custom_stack)
         else:
             stack_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
-            QueueApiClient.validate_stack(keboola_stack)
         return stack_url
-
-    @staticmethod
-    def validate_stack(stack: str) -> None:
-        if stack not in VALID_STACKS:
-            raise QueueApiClientException(
-                f"Invalid stack entered, make sure it is in the list of valid stacks {VALID_STACKS} ")
 
     def run_orchestration(self, orch_id: str, variables: Optional[List[Dict]]) -> Dict:
         data = {"component": "keboola.orchestrator",
