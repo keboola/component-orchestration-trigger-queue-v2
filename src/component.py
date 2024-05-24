@@ -35,8 +35,7 @@ def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
     else:
         stack_url = STACK_URL.replace("{STACK}", keboola_stack)
         if keboola_stack not in VALID_STACKS:
-            raise QueueApiClientException(
-                f"Invalid stack entered, make sure it is in the list of valid stacks {VALID_STACKS} ")
+            raise UserException(f"Invalid stack entered, make sure it is in the list of valid stacks {VALID_STACKS} ")
     return stack_url
 
 
