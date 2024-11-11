@@ -86,10 +86,13 @@ class Component(ComponentBase):
                     check_variables(variables_on_failure)
 
                     try:
-                        orchestration_run = self._runner_client.run_orchestration(
+                        orchestration_failure_run = self._runner_client.run_orchestration(
                             orch_id_on_failure,
                             variables_on_failure
                         )
+                        logging.info("Orchestration run triggered on failure started with job ID "
+                                     f"{orchestration_failure_run.get('id')}")
+
                     except QueueApiClientException as api_exc:
                         raise UserException(f"Orchestration run triggered on failure failed on: {api_exc}") from api_exc
 
