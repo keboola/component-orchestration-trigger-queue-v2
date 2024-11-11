@@ -161,51 +161,46 @@
         }
       }
     },
-    "triggerOrchestrationOnFailureConfiguration": {
-      "type": "object",
-      "title": "Trigger orchestration on failure configuration",
-      "properties": {
-        "orchestrationId": {
-          "type": "integer",
-          "title": "Orchestration ID",
-          "enum": [],
-          "format": "select",
-          "options": {
-            "async": {
-              "label": "Re-load orchestrations",
-              "action": "list_orchestrations"
-            }
-          },
-          "uniqueItems": true
+    "failureOrchestrationId": {
+      "type": "integer",
+      "title": "Orchestration ID to trigger when the main orchestration fails.",
+      "propertyOrder": 47,
+      "enum": [],
+      "format": "select",
+      "options": {
+        "async": {
+          "label": "Re-load orchestrations",
+          "action": "list_orchestrations"
         },
-        "variables": {
-          "type": "array",
-          "format": "table",
-          "title": "Variables",
-          "uniqueItems": true,
-          "items": {
-            "type": "object",
-            "title": "Variable",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "value": {
-                "type": "string"
-              }
-            }
-          }
+        "dependencies": {
+          "triggerOrchestrationOnFailure": true
         }
       },
-      "propertyOrder": 46,
+      "uniqueItems": true
+    },
+    "failureVariables": {
+      "type": "array",
+      "format": "table",
+      "title": "Variables passed to the orchestration triggered on failure.",
+      "propertyOrder": 48,
+      "uniqueItems": true,
       "options": {
         "dependencies": {
           "triggerOrchestrationOnFailure": true
         }
       },
-      "required": [
-        "orchestrationId"
-      ]
+      "items": {
+        "type": "object",
+        "title": "Variable",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
     },
     "variables": {
       "type": "array",
