@@ -157,7 +157,7 @@
       "description": "Trigger another orchestration when the main orchestration fails.",
       "options": {
         "dependencies": {
-          "failOnWarning": true
+          "waitUntilFinish": true
         }
       }
     },
