@@ -21,6 +21,8 @@ KEY_VARIABLE_NAME = "name"
 KEY_VARIABLE_VALUE = "value"
 KEY_FAIL_ON_WARNING = "failOnWarning"
 KEY_TRIGGER_ORCHESTRATION_ON_FAILURE = "triggerOrchestrationOnFailure"
+KEY_ORCHESTRATION_ID_ON_FAILURE = "failureOrchestrationId"
+KEY_VARIABLES_ON_FAILURE = "failureVariables"
 
 REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
@@ -80,8 +82,8 @@ class Component(ComponentBase):
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
             except QueueApiClientException as api_exc:
                 if fail_on_warning and trigger_orchestration_on_failure:
-                    orch_id_on_failure = params["triggerOrchestrationOnFailureConfiguration"].get(KEY_ORCHESTRATION_ID)
-                    variables_on_failure = params["triggerOrchestrationOnFailureConfiguration"].get(KEY_VARIABLES, [])
+                    orch_id_on_failure = params.get(KEY_ORCHESTRATION_ID_ON_FAILURE)
+                    variables_on_failure = params.get(KEY_VARIABLES_ON_FAILURE, [])
                     check_variables(variables_on_failure)
 
                     try:
