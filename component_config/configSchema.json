@@ -149,6 +149,64 @@
         }
       }
     },
+    "triggerOrchestrationOnFailure": {
+      "type": "boolean",
+      "format": "checkbox",
+      "title": "Trigger orchestration on failure",
+      "propertyOrder": 46,
+      "description": "Trigger another orchestration when the main orchestration fails.",
+      "options": {
+        "dependencies": {
+          "failOnWarning": true
+        }
+      }
+    },
+    "triggerOrchestrationOnFailureConfiguration": {
+      "type": "object",
+      "title": "Trigger orchestration on failure configuration",
+      "properties": {
+        "orchestrationId": {
+          "type": "integer",
+          "title": "Orchestration ID",
+          "enum": [],
+          "format": "select",
+          "options": {
+            "async": {
+              "label": "Re-load orchestrations",
+              "action": "list_orchestrations"
+            }
+          },
+          "uniqueItems": true
+        },
+        "variables": {
+          "type": "array",
+          "format": "table",
+          "title": "Variables",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "title": "Variable",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "propertyOrder": 46,
+      "options": {
+        "dependencies": {
+          "triggerOrchestrationOnFailure": true
+        }
+      },
+      "required": [
+        "orchestrationId"
+      ]
+    },
     "variables": {
       "type": "array",
       "propertyOrder": 50,
