@@ -80,9 +80,8 @@ class Component(ComponentBase):
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
             except QueueApiClientException as api_exc:
                 if fail_on_warning and trigger_orchestration_on_failure:
-                    config_on_failure = params.get("triggerOrchestrationOnFailureConfiguration", {})
-                    orch_id_on_failure = config_on_failure.get(KEY_ORCHESTRATION_ID)
-                    variables_on_failure = config_on_failure.get(KEY_VARIABLES, [])
+                    orch_id_on_failure = params["triggerOrchestrationOnFailureConfiguration"].get(KEY_ORCHESTRATION_ID)
+                    variables_on_failure = params["triggerOrchestrationOnFailureConfiguration"].get(KEY_VARIABLES, [])
                     check_variables(variables_on_failure)
 
                     try:
