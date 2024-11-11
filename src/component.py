@@ -20,6 +20,7 @@ KEY_VARIABLES = "variables"
 KEY_VARIABLE_NAME = "name"
 KEY_VARIABLE_VALUE = "value"
 KEY_FAIL_ON_WARNING = "failOnWarning"
+KEY_TRIGGER_ORCHESTRATION_ON_FAILURE = "triggerOrchestrationOnFailure"
 
 REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
@@ -39,6 +40,12 @@ def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
     return stack_url
 
 
+def check_variables(variables) -> None:
+    if any(v['name'] == '' for v in variables):
+        raise UserException("There is a variable with empty name in the configuration. "
+                            "Please provide a valid name or remove the variable row.")
+
+
 class Component(ComponentBase):
 
     def __init__(self):
@@ -54,12 +61,11 @@ class Component(ComponentBase):
         orch_id = params.get(KEY_ORCHESTRATION_ID)
 
         variables = params.get(KEY_VARIABLES, [])
-        if any(v['name'] == '' for v in variables):
-            raise UserException("There is a variable with empty name in the configuration. "
-                                "Please provide a valid name or remove the variable row.")
+        check_variables(variables)
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
         fail_on_warning = params.get(KEY_FAIL_ON_WARNING, True)
+        trigger_orchestration_on_failure = params.get(KEY_TRIGGER_ORCHESTRATION_ON_FAILURE, False)
 
         try:
             orchestration_run = self._runner_client.run_orchestration(orch_id, variables)
@@ -73,7 +79,22 @@ class Component(ComponentBase):
             try:
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
             except QueueApiClientException as api_exc:
-                raise UserException(api_exc) from api_exc
+                if fail_on_warning and trigger_orchestration_on_failure:
+                    config_on_failure = params.get("triggerOrchestrationOnFailureConfiguration", {})
+                    orch_id_on_failure = config_on_failure.get(KEY_ORCHESTRATION_ID)
+                    variables_on_failure = config_on_failure.get(KEY_VARIABLES, [])
+                    check_variables(variables_on_failure)
+
+                    try:
+                        orchestration_run = self._runner_client.run_orchestration(
+                            orch_id_on_failure,
+                            variables_on_failure
+                        )
+                    except QueueApiClientException as api_exc:
+                        raise UserException(f"Orchestration run triggered on failure failed on: {api_exc}") from api_exc
+
+                else:
+                    raise UserException(f"Main orchestration run failed on: {api_exc}") from api_exc
             logging.info("Orchestration is finished")
             self.process_status(status, fail_on_warning)
         else:
