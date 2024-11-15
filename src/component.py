@@ -84,6 +84,7 @@ class Component(ComponentBase):
                 if trigger_orchestration_on_failure and status.lower() != "success":
                     orch_id_on_failure = params.get(KEY_ORCHESTRATION_ID_ON_FAILURE)
                     variables_on_failure = params.get(KEY_VARIABLES_ON_FAILURE, [])
+                    check_variables(variables_on_failure)
                     try:
                         failure_orchestration_status = self._runner_client.run_orchestration(
                             orch_id_on_failure,
