@@ -89,8 +89,8 @@ class Component(ComponentBase):
                             orch_id_on_failure,
                             variables_on_failure
                         )
-                        logging.info(f"Main orchestration run failed, triggering orchestration with job ID "
-                                     f"{failure_orchestration_run.get('id')}")
+                        logging.warning(f"Main orchestration run failed, triggering orchestration with job ID "
+                                        f"{failure_orchestration_run.get('id')}")
                         failure_orchestration_run_status = self._runner_client.wait_until_job_finished(
                             failure_orchestration_run.get('id')
                         )
@@ -127,7 +127,6 @@ class Component(ComponentBase):
             raise UserException(api_exc) from api_exc
 
         stack_url = get_stack_url(stack, custom_stack)
-
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
 
     @staticmethod
