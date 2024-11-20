@@ -80,8 +80,8 @@ class Component(ComponentBase):
             try:
                 logging.info("Waiting till orchestration is finished")
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
-                logging.info("Orchestration is finished")
                 if trigger_orchestration_on_failure and status.lower() != "success":
+                    logging.info("Orchestration is finished")
                     orch_id_on_failure = params['orchestrationOnFailureSettings'].get(KEY_ORCHESTRATION_ID_ON_FAILURE)
                     variables_on_failure = params['orchestrationOnFailureSettings'].get(KEY_VARIABLES_ON_FAILURE, [])
                     check_variables(variables_on_failure)
@@ -100,6 +100,8 @@ class Component(ComponentBase):
                     except QueueApiClientException as api_exc:
                         raise UserException("Orchestration triggered on failure of main run failed on: "
                                             f"{api_exc}") from api_exc
+                else:
+                    logging.info("Orchestration is finished")
                     self.process_status(status, fail_on_warning)
 
             except QueueApiClientException as api_exc:
