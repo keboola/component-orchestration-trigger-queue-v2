@@ -10,12 +10,10 @@ COPY requirements.txt /code/requirements.txt
 
 RUN pip install -r /code/requirements.txt
 
-WORKDIR /code/
-
-COPY /src /src/
-COPY /tests /tests/
-COPY /scripts /scripts/
-COPY flake8.cfg /flake8.cfg
-COPY deploy.sh /deploy.sh
+COPY /src /code/src/
+COPY /tests /code/tests/
+COPY /scripts /code/scripts/
+COPY flake8.cfg /code/flake8.cfg
+COPY deploy.sh /code/deploy.sh
 
 CMD ["python", "-u", "/code/src/component.py"]
