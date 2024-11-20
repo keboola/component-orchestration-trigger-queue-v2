@@ -77,27 +77,34 @@ class Component(ComponentBase):
         logging.info(f"Orchestration run started with job ID {orchestration_run.get('id')}")
 
         if wait_until_finish:
-            logging.info("Waiting till orchestration is finished")
             try:
+                logging.info("Waiting till orchestration is finished")
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
-            except QueueApiClientException as api_exc:
                 if trigger_orchestration_on_failure and status.lower() != "success":
-                    orch_id_on_failure = params.get(KEY_ORCHESTRATION_ID_ON_FAILURE)
-                    variables_on_failure = params.get(KEY_VARIABLES_ON_FAILURE, [])
+                    orch_id_on_failure = params['orchestrationOnFailureSettings'].get(KEY_ORCHESTRATION_ID_ON_FAILURE)
+                    variables_on_failure = params['orchestrationOnFailureSettings'].get(KEY_VARIABLES_ON_FAILURE, [])
                     check_variables(variables_on_failure)
                     try:
-                        failure_orchestration_status = self._runner_client.run_orchestration(
+                        failure_orchestration_run = self._runner_client.run_orchestration(
                             orch_id_on_failure,
                             variables_on_failure
                         )
-                        self.process_status(failure_orchestration_status, fail_on_warning)
+                        logging.info(f"Main orchestration run failed, triggering orchestration with job ID "
+                                     f"{failure_orchestration_run.get('id')}")
+                        failure_orchestration_run_status = self._runner_client.wait_until_job_finished(
+                            failure_orchestration_run.get('id')
+                        )
+                        logging.info("Orchestration triggered on failure is finished")
+                        self.process_status(failure_orchestration_run_status, fail_on_warning)
                     except QueueApiClientException as api_exc:
                         raise UserException("Orchestration triggered on failure of main run failed on: "
                                             f"{api_exc}") from api_exc
-                else:
-                    raise UserException(f"Main orchestration run failed on: {api_exc}") from api_exc
-            logging.info("Orchestration is finished")
-            self.process_status(status, fail_on_warning)
+
+                logging.info("Orchestration is finished")
+                self.process_status(status, fail_on_warning)
+
+            except QueueApiClientException as api_exc:
+                raise UserException(f"Main orchestration run failed on: {api_exc}") from api_exc
 
         else:
             logging.info("Orchestration is being run. if you require the trigger to wait "
