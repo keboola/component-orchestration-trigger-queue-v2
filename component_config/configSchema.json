@@ -161,44 +161,49 @@
         }
       }
     },
-    "failureOrchestrationId": {
-      "type": "integer",
-      "title": "Orchestration ID to trigger when the main orchestration fails.",
+    "orchestrationOnFailureSettings": {
+      "type": "object",
+      "title": "Failure orchestration settings",
+      "required": [
+        "failureOrchestrationId"
+      ],
       "propertyOrder": 47,
-      "enum": [],
-      "format": "select",
-      "options": {
-        "async": {
-          "label": "Re-load orchestrations",
-          "action": "list_orchestrations"
-        },
-        "dependencies": {
-          "triggerOrchestrationOnFailure": true
-        }
-      },
-      "uniqueItems": true
-    },
-    "failureVariables": {
-      "type": "array",
-      "format": "table",
-      "title": "Variables passed to the orchestration triggered on failure.",
-      "propertyOrder": 48,
-      "uniqueItems": true,
-      "options": {
-        "dependencies": {
-          "triggerOrchestrationOnFailure": true
-        }
-      },
-      "items": {
-        "type": "object",
-        "title": "Variable",
-        "properties": {
-          "name": {
-            "type": "string"
+      "properties": {
+        "failureOrchestrationId": {
+          "type": "integer",
+          "title": "Orchestration ID to trigger when the main orchestration fails.",
+          "enum": [],
+          "format": "select",
+          "options": {
+            "async": {
+              "label": "Re-load orchestrations",
+              "action": "list_orchestrations"
+            }
           },
-          "value": {
-            "type": "string"
+          "uniqueItems": true
+        },
+        "failureVariables": {
+          "type": "array",
+          "format": "table",
+          "title": "Variables passed to the orchestration triggered on failure.",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "title": "Variable",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
           }
+        }
+      },
+      "options": {
+        "dependencies": {
+          "triggerOrchestrationOnFailure": true
         }
       }
     },
