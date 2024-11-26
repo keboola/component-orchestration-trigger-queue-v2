@@ -182,7 +182,7 @@
         },
         "failureConfigurationId": {
           "type": "string",
-          "title": "Configuration ID of action triggered on orchestration failure",
+          "title": "Configuration ID",
           "enum": [],
           "format": "select",
           "options": {
@@ -196,7 +196,7 @@
         "failureVariables": {
           "type": "array",
           "format": "table",
-          "title": "Variables passed to the action triggered on failure.",
+          "title": "Variables",
           "uniqueItems": true,
           "items": {
             "type": "object",
