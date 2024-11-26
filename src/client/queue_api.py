@@ -42,6 +42,23 @@ class QueueApiClient(HttpClient):
         self._handle_http_error(response)
         return json.loads(response.text)
 
+    def run_job(
+            self,
+            component_id: str,
+            config_id: str,
+            variables: Optional[List[Dict]]) -> Dict:
+
+        data = {"component": component_id,
+                "mode": "run",
+                "config": config_id}
+        if variables:
+            data["variableValuesData"] = {"values": variables}
+        header = {'Content-Type': 'application/json'}
+
+        response = self.post_raw(endpoint_path="jobs", headers=header, data=json.dumps(data))
+        self._handle_http_error(response)
+        return json.loads(response.text)
+
     def wait_until_job_finished(self, job_id: str) -> str:
         is_finished = False
         while not is_finished:
