@@ -219,7 +219,7 @@ class Component(ComponentBase):
             raw_configs = raw_configs | chunk
         return [
             SelectElement(
-                label=f"[Component - {k}] [Config - {v['id']}] {v['name']}", value=str(f"{k}-{v['id']}")
+                label=f"[Component ID - {k}] [Config ID - {v['id']}] {v['name']}", value=str(f"{k}-{v['id']}")
             ) for k, v in raw_configs
         ]
 
