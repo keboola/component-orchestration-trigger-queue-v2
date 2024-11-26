@@ -3,6 +3,7 @@ from typing import Optional
 
 import requests
 from kbcstorage.configurations import Configurations
+from kbcstorage.components import Components
 from keboola.component.base import ComponentBase, sync_action
 from keboola.component.exceptions import UserException
 from keboola.component.sync_actions import SelectElement, ValidationResult
@@ -20,8 +21,10 @@ KEY_VARIABLES = "variables"
 KEY_VARIABLE_NAME = "name"
 KEY_VARIABLE_VALUE = "value"
 KEY_FAIL_ON_WARNING = "failOnWarning"
-KEY_TRIGGER_ORCHESTRATION_ON_FAILURE = "triggerOrchestrationOnFailure"
-KEY_ORCHESTRATION_ID_ON_FAILURE = "failureOrchestrationId"
+KEY_TRIGGER_ACTION_ON_FAILURE = "triggerOrchestrationOnFailure"
+KEY_ACTION_ON_FAILURE_SETTINGS = "actionOnFailureSettings"
+KEY_TARGET_PROJECT = "targetProject"
+KEY_CONFIGURATION_ID_ON_FAILURE = "failureOrchestrationId"
 KEY_VARIABLES_ON_FAILURE = "failureVariables"
 
 REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
@@ -67,7 +70,7 @@ class Component(ComponentBase):
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
         fail_on_warning = params.get(KEY_FAIL_ON_WARNING, True)
-        trigger_orchestration_on_failure = params.get(KEY_TRIGGER_ORCHESTRATION_ON_FAILURE, False)
+        trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
 
         try:
             orchestration_run = self._runner_client.run_orchestration(orch_id, variables)
@@ -80,32 +83,37 @@ class Component(ComponentBase):
             try:
                 logging.info("Waiting till orchestration is finished")
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
-                if trigger_orchestration_on_failure and status.lower() != "success":
+                if trigger_action_on_failure and status.lower() != "success":
                     logging.info("Orchestration is finished")
-                    orch_id_on_failure = params['orchestrationOnFailureSettings'].get(KEY_ORCHESTRATION_ID_ON_FAILURE)
-                    variables_on_failure = params['orchestrationOnFailureSettings'].get(KEY_VARIABLES_ON_FAILURE, [])
+
+                    job_to_trigger = params[
+                        KEY_ACTION_ON_FAILURE_SETTINGS
+                    ].get(KEY_CONFIGURATION_ID_ON_FAILURE).split("-")
+
+                    variables_on_failure = params[KEY_ACTION_ON_FAILURE_SETTINGS].get(KEY_VARIABLES_ON_FAILURE, [])
                     check_variables(variables_on_failure)
+
                     try:
-                        failure_orchestration_run = self._runner_client.run_orchestration(
-                            orch_id_on_failure,
+                        logging.warning("Orchestration failed, triggering action with configration ID "
+                                        f"{job_to_trigger[1]}")
+                        action_on_failure_run = self._runner_client.run_job(
+                            job_to_trigger[0],
+                            job_to_trigger[1],
                             variables_on_failure
                         )
-                        logging.warning(f"Main orchestration run failed, triggering orchestration with job ID "
-                                        f"{failure_orchestration_run.get('id')}")
-                        failure_orchestration_run_status = self._runner_client.wait_until_job_finished(
-                            failure_orchestration_run.get('id')
-                        )
-                        logging.info("Orchestration triggered on failure is finished")
-                        self.process_status(failure_orchestration_run_status, fail_on_warning)
+                        status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
+                        logging.info("Action triggered on failure finished")
+                        self.process_status(status_on_failure, fail_on_warning)
+
                     except QueueApiClientException as api_exc:
-                        raise UserException("Orchestration triggered on failure of main run failed on: "
+                        raise UserException("Action triggered on failure failed on: "
                                             f"{api_exc}") from api_exc
                 else:
                     logging.info("Orchestration is finished")
                     self.process_status(status, fail_on_warning)
 
             except QueueApiClientException as api_exc:
-                raise UserException(f"Main orchestration run failed on: {api_exc}") from api_exc
+                raise UserException(f"Orchestration run failed on: {api_exc}") from api_exc
 
         else:
             logging.info("Orchestration is being run. if you require the trigger to wait "
@@ -116,6 +124,7 @@ class Component(ComponentBase):
         sapi_token = params.get(KEY_SAPI_TOKEN)
         stack = params.get(KEY_STACK)
         custom_stack = params.get(KEY_CUSTOM_STACK, "")
+        project = params[KEY_ACTION_ON_FAILURE_SETTINGS].get(KEY_TARGET_PROJECT)
 
         if not sapi_token:
             raise UserException("Storage API token must be provided!")
@@ -129,6 +138,11 @@ class Component(ComponentBase):
 
         stack_url = get_stack_url(stack, custom_stack)
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
+        if project == "current":
+            token = self.environment_variables.token
+            self._components_client = Components(stack_url, token, 'default')
+        else:
+            self._components_client = Components(stack_url, sapi_token, 'default')
 
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
@@ -193,6 +207,21 @@ class Component(ComponentBase):
         self._init_clients()
         configurations = self._configurations_client.list('keboola.orchestrator')
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=str(c['id'])) for c in configurations]
+
+    @sync_action('list_configurations')
+    def list_configurations(self):
+        self._init_clients()
+        components = self._components_client.list()
+        raw_configs = {}
+        for c in components:
+            configurations = self._configurations_client.list(c['id'])
+            chunk = {c['id']: configurations}
+            raw_configs = raw_configs | chunk
+        return [
+            SelectElement(
+                label=f"[Component - {k}] [Config - {v['id']}] {v['name']}", value=str(f"{k}-{v['id']}")
+            ) for k, v in raw_configs
+        ]
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):

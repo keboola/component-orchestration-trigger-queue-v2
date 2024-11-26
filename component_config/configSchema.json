@@ -149,35 +149,46 @@
         }
       }
     },
-    "triggerOrchestrationOnFailure": {
+    "triggerActionOnFailure": {
       "type": "boolean",
       "format": "checkbox",
-      "title": "Trigger orchestration on failure",
+      "title": "Trigger action on failure",
       "propertyOrder": 46,
-      "description": "Trigger another orchestration when the main orchestration fails.",
+      "description": "Trigger action when the orchestration fails.",
       "options": {
         "dependencies": {
           "waitUntilFinish": true
         }
       }
     },
-    "orchestrationOnFailureSettings": {
+    "actionOnFailureSettings": {
       "type": "object",
-      "title": "Failure orchestration settings",
-      "required": [
-        "failureOrchestrationId"
-      ],
+      "title": "Action on failure settings",
       "propertyOrder": 47,
       "properties": {
-        "failureOrchestrationId": {
-          "type": "integer",
-          "title": "Orchestration ID to trigger when the main orchestration fails.",
+        "targetProject": {
+          "type": "string",
+          "title": "Job location",
+          "enum": [
+            "current",
+            "destination"
+          ],
+          "options": {
+            "enum_titles": [
+              "Current Project",
+              "Destination Project (where the orchestration is running)"
+            ]
+          }
+        },
+        "failureConfigurationId": {
+          "type": "string",
+          "title": "Configuration ID of action triggered on orchestration failure",
           "enum": [],
           "format": "select",
           "options": {
             "async": {
-              "label": "Re-load orchestrations",
-              "action": "list_orchestrations"
+              "label": "Re-load configurations",
+              "action": "list_configurations"
             }
           },
           "uniqueItems": true
@@ -185,7 +196,7 @@
         "failureVariables": {
           "type": "array",
           "format": "table",
-          "title": "Variables passed to the orchestration triggered on failure.",
+          "title": "Variables passed to the action triggered on failure.",
           "uniqueItems": true,
           "items": {
             "type": "object",
@@ -203,7 +214,7 @@
       },
       "options": {
         "dependencies": {
-          "triggerOrchestrationOnFailure": true
+          "triggerActionOnFailure": true
         }
       }
     },
