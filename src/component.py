@@ -4,7 +4,7 @@ from typing import Optional
 import requests
 from kbcstorage.configurations import Configurations
 from kbcstorage.components import Components
-from keboola.component.base import ComponentBase, sync_action
+from keboola.component.base import ComponentBase, sync_action, BaseException
 from keboola.component.exceptions import UserException
 from keboola.component.sync_actions import SelectElement, ValidationResult
 
@@ -233,7 +233,8 @@ class Component(ComponentBase):
             return result
 
         except Exception as e:
-            raise ValidationResult(f"Error: {e}")
+            message = BaseException(f"Error: {e}")
+            raise ValidationResult(message)
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
