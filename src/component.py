@@ -235,9 +235,6 @@ class Component(ComponentBase):
         except Exception as e:
             return ValidationResult(f"Error: {e}")
 
-        except BaseException as e:
-            return ValidationResult(f"Error: {e}")
-
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
