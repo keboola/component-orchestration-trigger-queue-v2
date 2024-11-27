@@ -213,15 +213,18 @@ class Component(ComponentBase):
         self._init_clients()
         components = self._components_client.list()
         raw_configs = {}
-        for c in components:
-            configurations = self._configurations_client.list(c['id'])
-            chunk = {c['id']: configurations}
-            raw_configs = raw_configs | chunk
-        return [
-            SelectElement(
-                label=f"[Component ID - {k}] [Config ID - {v['id']}] {v['name']}", value=str(f"{k}-{v['id']}")
-            ) for k, v in raw_configs
-        ]
+        try:
+            for c in components:
+                configurations = self._configurations_client.list(c['id'])
+                chunk = {c['id']: configurations}
+                raw_configs = raw_configs | chunk
+            return [
+                SelectElement(
+                    label=f"[Component ID - {k}] [Config ID - {v['id']}] {v['name']}", value=str(f"{k}-{v['id']}")
+                ) for k, v in raw_configs
+            ]
+        except Exception as e:
+            raise ValidationResult(f"Error: {e}")
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
