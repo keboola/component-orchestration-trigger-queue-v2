@@ -233,10 +233,10 @@ class Component(ComponentBase):
             return result
 
         except Exception as e:
-            ValidationResult(f"Error: {e}")
+            return ValidationResult(f"Error: {e}")
 
         except BaseException as e:
-            ValidationResult(f"Error: {e}")
+            return ValidationResult(f"Error: {e}")
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
