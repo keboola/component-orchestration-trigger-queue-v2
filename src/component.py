@@ -233,7 +233,7 @@ class Component(ComponentBase):
             return result
 
         except Exception as e:
-            message = UserException(f"Error: {e}")
+            message = BaseException(f"Error: {e}")
             raise ValidationResult(message)
 
     @sync_action('sync_trigger_metadata')
