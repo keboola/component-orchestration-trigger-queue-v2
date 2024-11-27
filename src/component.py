@@ -232,15 +232,11 @@ class Component(ComponentBase):
             ]
             return result
 
-        except (
-            BaseException,
-            requests.HTTPError,
-            requests.ConnectionError,
-            requests.Timeout,
-            requests.RequestException,
-            Exception
-        ) as e:
-            raise ValidationResult(f"Error: {e}")
+        except Exception as e:
+            ValidationResult(f"Error: {e}")
+
+        except BaseException as e:
+            ValidationResult(f"Error: {e}")
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
