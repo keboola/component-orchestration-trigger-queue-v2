@@ -10,6 +10,7 @@ from keboola.component.sync_actions import SelectElement, ValidationResult
 
 from client import QueueApiClient, QueueApiClientException
 
+
 CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
 
 KEY_SAPI_TOKEN = '#kbcToken'
@@ -86,11 +87,13 @@ class Component(ComponentBase):
                 if trigger_action_on_failure and status.lower() != "success":
                     logging.info("Orchestration is finished")
 
-                    job_to_trigger = params[
-                        KEY_ACTION_ON_FAILURE_SETTINGS
-                    ].get(KEY_CONFIGURATION_ID_ON_FAILURE).split("-")
+                    job_to_trigger = params.get(
+                        KEY_ACTION_ON_FAILURE_SETTINGS, {}
+                    ).get(KEY_CONFIGURATION_ID_ON_FAILURE).split("-")
 
-                    variables_on_failure = params[KEY_ACTION_ON_FAILURE_SETTINGS].get(KEY_VARIABLES_ON_FAILURE, [])
+                    variables_on_failure = params.get(
+                        KEY_ACTION_ON_FAILURE_SETTINGS, {}
+                    ).get(KEY_VARIABLES_ON_FAILURE, [])
                     check_variables(variables_on_failure)
 
                     try:
@@ -124,7 +127,7 @@ class Component(ComponentBase):
         sapi_token = params.get(KEY_SAPI_TOKEN)
         stack = params.get(KEY_STACK)
         custom_stack = params.get(KEY_CUSTOM_STACK, "")
-        project = params[KEY_ACTION_ON_FAILURE_SETTINGS].get(KEY_TARGET_PROJECT)
+        project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
 
         if not sapi_token:
             raise UserException("Storage API token must be provided!")
@@ -215,14 +218,20 @@ class Component(ComponentBase):
         raw_configs = {}
         try:
             for c in components:
-                configurations = self._configurations_client.list(c['id'])
-                chunk = {c['id']: configurations}
+                component_id = c['id']
+                configurations = self._configurations_client.list(component_id)
+                chunk = {component_id: configurations}
                 raw_configs = raw_configs | chunk
-            return [
+
+            result = [
                 SelectElement(
-                    label=f"[Component ID - {k}] [Config ID - {v['id']}] {v['name']}", value=str(f"{k}-{v['id']}")
-                ) for k, v in raw_configs
+                    label=f"[Component ID - {k}] [Config ID - {v['id']}] {v['name']}",
+                    value=str(f"{k}-{v['id']}")
+                )
+                for k, v in raw_configs.items()
             ]
+            return result
+
         except Exception as e:
             raise ValidationResult(f"Error: {e}")
 
