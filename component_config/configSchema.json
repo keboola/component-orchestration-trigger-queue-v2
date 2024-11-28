@@ -180,6 +180,22 @@
             ]
           }
         },
+         "failureComponentId": {
+          "type": "string",
+          "title": "Component",
+          "enum": [],
+          "format": "select",
+          "options": {
+            "async": {
+              "label": "Re-load components",
+              "action": "list_components",
+              "autoload": [
+                        "parameters.triggerActionOnFailure"
+                    ]
+            }
+          },
+          "uniqueItems": true
+        },
         "failureConfigurationId": {
           "type": "string",
           "title": "Configuration ID",
@@ -188,7 +204,10 @@
           "options": {
             "async": {
               "label": "Re-load configurations",
-              "action": "list_configurations"
+              "action": "list_configurations",
+              "autoload": [
+                        "parameters.failureComponentId"
+                    ]
             }
           },
           "uniqueItems": true
