@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 
 import requests
 from kbcstorage.configurations import Configurations
@@ -214,20 +214,21 @@ class Component(ComponentBase):
     # V principu můžře být list configurací obří a bylo by to nepřehledné v jednoom,
     # taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
     @sync_action('list_components')
-    def list_components(self):
+    def list_components(self) -> List[SelectElement]:
         return [SelectElement(label="Error: chyba", value="")]
-        try:
-            self._init_clients()
-            components = self._components_client.list()
-            return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
-        except Exception as e:
-            logging.info(f"Error: {e}")
-            return [SelectElement(label="Error: chyba", value="")]
+
+    # try:
+    #    self._init_clients()
+    #    components = self._components_client.list()
+    #    return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
+    # except Exception as e:
+    #    logging.info(f"Error: {e}")
+    #    return [SelectElement(label="Error: chyba", value="")]
 
     @sync_action('list_configurations')
     def list_configurations(self):
-        self._init_clients()
         params = self.configuration.parameters
+        self._init_clients()
         component_id = params.get(KEY_FAILURE_COMPONENT_ID)
         if not component_id:
             raise UserException("Component ID must be provided!")
