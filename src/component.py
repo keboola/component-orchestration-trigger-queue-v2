@@ -221,7 +221,7 @@ class Component(ComponentBase):
             return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
         except Exception as e:
             logging.info(f"Error: {e}")
-            return [SelectElement(label=f"Error: {e}", value="")]
+            return [SelectElement(label="Error: chyba", value="")]
 
     @sync_action('list_configurations')
     def list_configurations(self):
