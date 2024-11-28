@@ -154,10 +154,11 @@ class Component(ComponentBase):
         custom_stack = params.get(KEY_CUSTOM_STACK, "")
         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
 
+        return [SelectElement(label=f"{sapi_token}, {stack}, {custom_stack}, {project}", value="")]
         stack_url = get_stack_url(stack, custom_stack)
         token = self.environment_variables.token
 
-        return SelectElement(label=f"{stack_url}, {token:0_4}, {sapi_token:0:4}, {project}, {custom_stack}", value="")
+        return [SelectElement(label=f"{stack_url}, {token:0_4}, {sapi_token:0:4}, {project}, {custom_stack}", value="")]
 
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
