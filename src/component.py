@@ -219,7 +219,6 @@ class Component(ComponentBase):
 
     @sync_action('list_orchestrations')
     def list_orchestration(self):
-        return self._test_init_clients()
         self._init_clients()
         configurations = self._configurations_client.list('keboola.orchestrator')
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
@@ -228,6 +227,7 @@ class Component(ComponentBase):
     # taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
     @sync_action('list_components')
     def list_components(self):
+        return self._test_init_clients()
         self._init_clients()
         components = self._components_client.list()
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
