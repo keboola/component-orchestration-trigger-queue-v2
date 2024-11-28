@@ -215,7 +215,9 @@ class Component(ComponentBase):
     # taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
     @sync_action('list_components')
     def list_components(self) -> List[SelectElement]:
-        return [SelectElement(label="Error: chyba", value="value")]
+        return [SelectElement(label="Errorchyba", value="value")]
+
+
 
     # try:
     #    self._init_clients()
