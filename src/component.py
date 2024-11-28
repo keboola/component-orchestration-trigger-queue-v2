@@ -216,6 +216,7 @@ class Component(ComponentBase):
     @sync_action('list_components')
     def list_components(self):
         self._init_clients()
+        return SelectElement(label="Select component", value="")
         components = self._components_client.list()
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
 
