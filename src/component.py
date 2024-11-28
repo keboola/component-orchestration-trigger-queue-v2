@@ -157,7 +157,7 @@ class Component(ComponentBase):
         stack_url = get_stack_url(stack, custom_stack)
         token = self.environment_variables.token
 
-        return SelectElement(label=f"{stack_url}, {token:0_4}, {sapi_token:0:4}, {project}, {custom_stack}", value=f"")
+        return SelectElement(label=f"{stack_url}, {token:0_4}, {sapi_token:0:4}, {project}, {custom_stack}", value="")
 
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
