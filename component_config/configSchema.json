@@ -1,261 +1,264 @@
 {
-  "type": "object",
-  "title": "Parameters",
-  "required": [
-    "#kbcToken",
-    "kbcUrl",
-    "orchestrationId",
-    "waitUntilFinish"
-  ],
-  "properties": {
-    "#kbcToken": {
-      "type": "string",
-      "title": "KBC Storage API token",
-      "format": "password",
-      "minLength": 1,
-      "propertyOrder": 10,
-      "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
-    },
-    "kbcUrl": {
-      "title": "KBC Stack",
-      "type": "string",
-      "enum": [
-        "",
-        "us-east4.gcp.",
-        "eu-central-1.",
-        "north-europe.azure.",
-        "europe-west3.gcp.",
-        "Custom Stack"
-      ],
-      "options": {
-        "enum_titles": [
-          "US Virginia AWS - connection.keboola.com",
-          "US Virginia GCP - connection.us-east4.gcp.keboola.com",
-          "EU Frankfurt AWS - connection.eu-central-1.keboola.com",
-          "EU Ireland Azure - connection.north-europe.azure.keboola.com",
-          "EU Frankfurt GCP - connection.europe-west3.gcp.keboola.com",
-          "Custom Stack"
-        ]
-      },
-      "propertyOrder": 20
-    },
-    "custom_stack": {
-      "title": "Custom Stack",
-      "type": "string",
-      "propertyOrder": 25,
-      "description": "The name of your stack in connection.{CUSTOM_STACK}.keboola.cloud",
-      "options": {
-        "dependencies": {
-          "kbcUrl": "Custom Stack"
-        }
-      }
-    },
-    "orchestrationId": {
-      "type": "string",
-      "title": "Orchestration ID",
-      "propertyOrder": 30,
-      "enum": [],
-      "format": "select",
-      "options": {
-        "async": {
-          "label": "Re-load orchestrations",
-          "action": "list_orchestrations"
-        }
-      },
-      "uniqueItems": true
-    },
-    "trigger_metadata": {
-      "type": "object",
-      "format": "grid-strict",
-      "title": "Trigger Info",
-      "options": {
-            "tooltip": "Display metadata about the trigger. You may optionally save the results in the configuration for better convenience."
-          },
-      "properties": {
-        "sync_trigger_metadata": {
-          "type": "button",
-          "format": "sync-action",
-          "options": {
-            "async": {
-              "label": "SHOW INFO",
-              "action": "sync_trigger_metadata"
+    "type": "object",
+    "title": "Parameters",
+    "required": [
+        "#kbcToken",
+        "kbcUrl",
+        "orchestrationId",
+        "waitUntilFinish"
+    ],
+    "properties": {
+        "#kbcToken": {
+            "type": "string",
+            "title": "KBC Storage API token",
+            "format": "password",
+            "minLength": 1,
+            "propertyOrder": 10,
+            "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
+        },
+        "kbcUrl": {
+            "title": "KBC Stack",
+            "type": "string",
+            "enum": [
+                "",
+                "us-east4.gcp.",
+                "eu-central-1.",
+                "north-europe.azure.",
+                "europe-west3.gcp.",
+                "Custom Stack"
+            ],
+            "options": {
+                "enum_titles": [
+                    "US Virginia AWS - connection.keboola.com",
+                    "US Virginia GCP - connection.us-east4.gcp.keboola.com",
+                    "EU Frankfurt AWS - connection.eu-central-1.keboola.com",
+                    "EU Ireland Azure - connection.north-europe.azure.keboola.com",
+                    "EU Frankfurt GCP - connection.europe-west3.gcp.keboola.com",
+                    "Custom Stack"
+                ]
+            },
+            "propertyOrder": 20
+        },
+        "custom_stack": {
+            "title": "Custom Stack",
+            "type": "string",
+            "propertyOrder": 25,
+            "description": "The name of your stack in connection.{CUSTOM_STACK}.keboola.cloud",
+            "options": {
+                "dependencies": {
+                    "kbcUrl": "Custom Stack"
+                }
             }
-          },
-          "propertyOrder": 1
         },
-        "store_info": {
-          "title": "Store Metadata in configuration",
-          "type": "boolean",
-          "format": "checkbox",
-          "propertyOrder": 2,
-          "options": {
-            "grid_columns": 10,
-            "grid_break": true
-          }
+        "orchestrationId": {
+            "type": "integer",
+            "title": "Orchestration ID",
+            "propertyOrder": 30,
+            "enum": [],
+            "format": "select",
+            "options": {
+                "async": {
+                    "label": "Re-load orchestrations",
+                    "action": "list_orchestrations"
+                }
+            },
+            "uniqueItems": true
         },
-        "project_name": {
-          "title": "Project Name",
-          "type": "string",
-          "propertyOrder": 3,
-          "options": {
-            "grid_columns": 10,
-            "dependencies": {
-              "store_info": true
-            }
-          },
-          "enabled": false
-        },
-        "project_id": {
-          "title": "Project ID",
-          "propertyOrder": 4,
-          "options": {
-            "grid_columns": 2,
-            "dependencies": {
-              "store_info": true
-            }
-          },
-          "type": "string"
-        },
-        "orchestration_link": {
-          "title": "Orchestration link",
-          "type": "string",
-          "options": {
-            "grid_columns": 12,
-            "dependencies": {
-              "store_info": true
-            }
-          },
-          "propertyOrder": 5
-        }
-      }
-    },
-    "waitUntilFinish": {
-      "type": "boolean",
-      "format": "checkbox",
-      "title": "Wait for job finish and check jobs status",
-      "default": false,
-      "propertyOrder": 40
-    },
-    "failOnWarning": {
-      "type": "boolean",
-      "format": "checkbox",
-      "title": "Fail on Warning",
-      "default": true,
-      "propertyOrder": 45,
-      "description": "When checked, the trigger job will fail when the orchestration ends with a warning",
-      "options": {
-        "dependencies": {
-          "waitUntilFinish": true
-        }
-      }
-    },
-    "triggerActionOnFailure": {
-      "type": "boolean",
-      "format": "checkbox",
-      "title": "Trigger action on failure",
-      "propertyOrder": 46,
-      "description": "Trigger action when the orchestration fails.",
-      "options": {
-        "dependencies": {
-          "waitUntilFinish": true
-        }
-      }
-    },
-    "actionOnFailureSettings": {
-      "type": "object",
-      "title": "Action on failure settings",
-      "propertyOrder": 47,
-      "properties": {
-        "targetProject": {
-          "type": "string",
-          "title": "Job location",
-          "enum": [
-            "current",
-            "destination"
-          ],
-          "options": {
-            "enum_titles": [
-              "Current Project",
-              "Destination Project (where the orchestration is running)"
-            ]
-          }
-        },
-         "failureComponentId": {
-          "type": "string",
-          "title": "Component",
-          "enum": [],
-          "format": "select",
-          "options": {
-            "async": {
-              "label": "Re-load components",
-              "action": "list_components",
-              "autoload": [
-                        "parameters.triggerActionOnFailure",
-                        "parameters.actionOnFailureSettings.targetProject"
-                    ]
-            }
-          },
-          "uniqueItems": true
-        },
-        "failureConfigurationId": {
-          "type": "string",
-          "title": "Configuration ID",
-          "enum": [],
-          "format": "select",
-          "options": {
-            "async": {
-              "label": "Re-load configurations",
-              "action": "list_configurations",
-              "autoload": [
-                        "parameters.failureComponentId"
-                    ]
-            }
-          },
-          "uniqueItems": true
-        },
-        "failureVariables": {
-          "type": "array",
-          "format": "table",
-          "title": "Variables",
-          "uniqueItems": true,
-          "items": {
+        "trigger_metadata": {
             "type": "object",
-            "title": "Variable",
+            "format": "grid-strict",
+            "title": "Trigger Info",
+            "options": {
+                "tooltip": "Display metadata about the trigger. You may optionally save the results in the configuration for better convenience."
+            },
             "properties": {
-              "name": {
-                "type": "string"
-              },
-              "value": {
-                "type": "string"
-              }
+                "sync_trigger_metadata": {
+                    "type": "button",
+                    "format": "sync-action",
+                    "options": {
+                        "async": {
+                            "label": "SHOW INFO",
+                            "action": "sync_trigger_metadata"
+                        }
+                    },
+                    "propertyOrder": 1
+                },
+                "store_info": {
+                    "title": "Store Metadata in configuration",
+                    "type": "boolean",
+                    "format": "checkbox",
+                    "propertyOrder": 2,
+                    "options": {
+                        "grid_columns": 10,
+                        "grid_break": true
+                    }
+                },
+                "project_name": {
+                    "title": "Project Name",
+                    "type": "string",
+                    "propertyOrder": 3,
+                    "options": {
+                        "grid_columns": 10,
+                        "dependencies": {
+                            "store_info": true
+                        }
+                    },
+                    "enabled": false
+                },
+                "project_id": {
+                    "title": "Project ID",
+                    "propertyOrder": 4,
+                    "options": {
+                        "grid_columns": 2,
+                        "dependencies": {
+                            "store_info": true
+                        }
+                    },
+                    "type": "string"
+                },
+                "orchestration_link": {
+                    "title": "Orchestration link",
+                    "type": "string",
+                    "options": {
+                        "grid_columns": 12,
+                        "dependencies": {
+                            "store_info": true
+                        }
+                    },
+                    "propertyOrder": 5
+                }
             }
-          }
+        },
+        "waitUntilFinish": {
+            "type": "boolean",
+            "format": "checkbox",
+            "title": "Wait for job finish and check jobs status",
+            "default": false,
+            "propertyOrder": 40
+        },
+        "failOnWarning": {
+            "type": "boolean",
+            "format": "checkbox",
+            "title": "Fail on Warning",
+            "default": true,
+            "propertyOrder": 45,
+            "description": "When checked, the trigger job will fail when the orchestration ends with a warning",
+            "options": {
+                "dependencies": {
+                    "waitUntilFinish": true
+                }
+            }
+        },
+        "triggerActionOnFailure": {
+            "type": "boolean",
+            "format": "checkbox",
+            "title": "Trigger action on failure",
+            "propertyOrder": 46,
+            "description": "Trigger action when the orchestration fails.",
+            "options": {
+                "dependencies": {
+                    "waitUntilFinish": true
+                }
+            }
+        },
+        "actionOnFailureSettings": {
+            "type": "object",
+            "title": "Action on failure settings",
+            "propertyOrder": 47,
+            "properties": {
+                "targetProject": {
+                    "type": "string",
+                    "title": "Job location",
+                    "enum": [
+                        "current",
+                        "destination"
+                    ],
+                    "options": {
+                        "enum_titles": [
+                            "Current Project",
+                            "Destination Project (where the orchestration is running)"
+                        ]
+                    }
+                },
+                "failureComponentId": {
+                    "type": "array",
+                    "title": "Component",
+                    "items": {
+                        "enum": [],
+                        "type": "string"
+                    },
+                    "format": "select",
+                    "options": {
+                        "async": {
+                            "label": "Re-load components",
+                            "action": "list_components",
+                            "autoload": [
+                                "parameters.triggerActionOnFailure",
+                                "parameters.actionOnFailureSettings.targetProject"
+                            ]
+                        }
+                    },
+                    "uniqueItems": true
+                },
+                "failureConfigurationId": {
+                    "type": "string",
+                    "title": "Configuration ID",
+                    "enum": [],
+                    "format": "select",
+                    "options": {
+                        "async": {
+                            "label": "Re-load configurations",
+                            "action": "list_configurations",
+                            "autoload": [
+                                "parameters.failureComponentId"
+                            ]
+                        }
+                    },
+                    "uniqueItems": true
+                },
+                "failureVariables": {
+                    "type": "array",
+                    "format": "table",
+                    "title": "Variables",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "object",
+                        "title": "Variable",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "options": {
+                "dependencies": {
+                    "triggerActionOnFailure": true
+                }
+            }
+        },
+        "variables": {
+            "type": "array",
+            "propertyOrder": 50,
+            "format": "table",
+            "title": "Variables",
+            "uniqueItems": true,
+            "items": {
+                "type": "object",
+                "title": "Variable",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            }
         }
-      },
-      "options": {
-        "dependencies": {
-          "triggerActionOnFailure": true
-        }
-      }
-    },
-    "variables": {
-      "type": "array",
-      "propertyOrder": 50,
-      "format": "table",
-      "title": "Variables",
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "title": "Variable",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        }
-      }
     }
-  }
 }
