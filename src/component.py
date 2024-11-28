@@ -211,7 +211,8 @@ class Component(ComponentBase):
         configurations = self._configurations_client.list('keboola.orchestrator')
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
 
-    # V principu můžře být list configurací obří a bylo by to nepřehledné v jednoom, taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
+    # V principu můžře být list configurací obří a bylo by to nepřehledné v jednoom,
+    # taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
     @sync_action('list_components')
     def list_components(self):
         self._init_clients()
