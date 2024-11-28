@@ -147,6 +147,18 @@ class Component(ComponentBase):
         else:
             self._components_client = Components(stack_url, sapi_token, 'default')
 
+    def _test_init_clients(self):
+        params = self.configuration.parameters
+        sapi_token = params.get(KEY_SAPI_TOKEN)
+        stack = params.get(KEY_STACK)
+        custom_stack = params.get(KEY_CUSTOM_STACK, "")
+        project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
+
+        stack_url = get_stack_url(stack, custom_stack)
+        token = self.environment_variables.token
+
+        return SelectElement(label=f"{stack_url}, {token:0_4}, {sapi_token:0:4}, {project}, {custom_stack}", value=f"")
+
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
                       state=None, changeDescription='', branch_id=None, is_disabled=False, **kwargs):
@@ -207,6 +219,7 @@ class Component(ComponentBase):
 
     @sync_action('list_orchestrations')
     def list_orchestration(self):
+        return self._test_init_clients()
         self._init_clients()
         configurations = self._configurations_client.list('keboola.orchestrator')
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
