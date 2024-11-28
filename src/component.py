@@ -24,6 +24,7 @@ KEY_FAIL_ON_WARNING = "failOnWarning"
 KEY_TRIGGER_ACTION_ON_FAILURE = "triggerOrchestrationOnFailure"
 KEY_ACTION_ON_FAILURE_SETTINGS = "actionOnFailureSettings"
 KEY_TARGET_PROJECT = "targetProject"
+KEY_FAILURE_COMPONENT_ID = "failureComponentId"
 KEY_CONFIGURATION_ID_ON_FAILURE = "failureOrchestrationId"
 KEY_VARIABLES_ON_FAILURE = "failureVariables"
 
@@ -208,44 +209,52 @@ class Component(ComponentBase):
     def list_orchestration(self):
         self._init_clients()
         configurations = self._configurations_client.list('keboola.orchestrator')
-        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=str(c['id'])) for c in configurations]
+        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
+
+    # V principu můžře být list configurací obří a bylo by to nepřehledné v jednoom, taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
+    @sync_action('list_components')
+    def list_components(self):
+        self._init_clients()
+        components = self._components_client.list()
+        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
 
     @sync_action('list_configurations')
     def list_configurations(self):
-        return SelectElement(label="Select configuration", value="")
-
         self._init_clients()
-        components = self._components_client.list()
+        params = self.configuration.parameters
+        component_id = params.get(KEY_FAILURE_COMPONENT_ID)
+        if not component_id:
+            raise UserException("Component ID must be provided!")
         raw_configs = {}
         try:
-            for c in components:
-                component_id = c['id']
-                configurations = self._configurations_client.list(component_id)
+            configurations = self._configurations_client.list(component_id)
 
-                if isinstance(configurations, list):
-                    raw_configs[component_id] = configurations
-                else:
-                    logging.error("Unexpected type for configurations in component "
-                                  f"{component_id}: {type(configurations)}")
+            if isinstance(configurations, list):
+                raw_configs[component_id] = configurations
 
-            # select_elements = []
+            # TODO tohle je asi zbytečné
+            else:
+                logging.error("Unexpected type for configurations in component "
+                              f"{component_id}: {type(configurations)}")
+
+            select_elements = []
             for component_id, configs in raw_configs.items():
                 for config in configs:
-                    # select_elements.append(
-                    return SelectElement(
-                        label=f"[Component ID - {component_id}] [Config ID - {config['id']}] {config['name']}",
-                        value=f"{component_id}|{config['id']}"
+                    select_elements.append(
+                        SelectElement(
+                            label=f"{config['name']} -[{config['id']}]",
+                            value=f"{config['id']}"
+                        )
                     )
-                    # )
-            # return select_elements
+            return select_elements
 
         except KeyError as e:
-            logging.error(f"KeyError in processing: {e}")
-            raise ValidationResult(f"Error: Missing key {e}")
+            # validation result nejde raisovat
+            return ValidationResult(f"Error: Missing key {e}")
 
         except Exception as e:
-            logging.error(f"An unexpected error occurred: {e}")
-            raise ValidationResult(f"Error: {e}")
+            # validation result nejde raisovat
+            return ValidationResult(f"Error: {e}")
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
