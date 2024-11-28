@@ -89,7 +89,7 @@ class Component(ComponentBase):
 
                     job_to_trigger = params.get(
                         KEY_ACTION_ON_FAILURE_SETTINGS, {}
-                    ).get(KEY_CONFIGURATION_ID_ON_FAILURE).split("-")
+                    ).get(KEY_CONFIGURATION_ID_ON_FAILURE).split("|")
 
                     variables_on_failure = params.get(
                         KEY_ACTION_ON_FAILURE_SETTINGS, {}
@@ -220,23 +220,31 @@ class Component(ComponentBase):
             for c in components:
                 component_id = c['id']
                 configurations = self._configurations_client.list(component_id)
-                chunk = {component_id: configurations}
-                raw_configs = raw_configs | chunk
 
-            result = [
-                SelectElement(
-                    label=f"[Component ID - {k}] [Config ID - {v['id']}] {v['name']}",
-                    value=str(f"{k}-{v['id']}")
-                )
-                for k, v in raw_configs.items()
-            ]
-            return result
+                if isinstance(configurations, list):
+                    raw_configs[component_id] = configurations
+                else:
+                    logging.error("Unexpected type for configurations in component "
+                                  f"{component_id}: {type(configurations)}")
+
+            select_elements = []
+            for component_id, configs in raw_configs.items():
+                for config in configs:
+                    select_elements.append(
+                        SelectElement(
+                            label=f"[Component ID - {component_id}] [Config ID - {config['id']}] {config['name']}",
+                            value=f"{component_id}|{config['id']}"
+                        )
+                    )
+            return select_elements
+
+        except KeyError as e:
+            logging.error(f"KeyError in processing: {e}")
+            raise ValidationResult(f"Error: Missing key {e}")
 
         except Exception as e:
-            return ValidationResult(f"Error: {e}")
-
-        except BaseException as e:
-            return ValidationResult(f"Error: {e}")
+            logging.error(f"An unexpected error occurred: {e}")
+            raise ValidationResult(f"Error: {e}")
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
