@@ -217,10 +217,11 @@ class Component(ComponentBase):
     def list_components(self):
         try:
             self._init_clients()
+            components = self._components_client.list()
+            return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
         except Exception as e:
-            return ValidationResult(f"Error: {e}")
-        components = self._components_client.list()
-        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
+            logging.info(f"Error: {e}")
+            return [SelectElement(label=f"Error: {e}", value="")]
 
     @sync_action('list_configurations')
     def list_configurations(self):
