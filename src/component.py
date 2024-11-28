@@ -62,7 +62,6 @@ class Component(ComponentBase):
     def run(self) -> None:
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
-        self.list_components()
         self._init_clients()
 
         orch_id = params.get(KEY_ORCHESTRATION_ID)
