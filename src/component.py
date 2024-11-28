@@ -215,6 +215,7 @@ class Component(ComponentBase):
     # taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
     @sync_action('list_components')
     def list_components(self):
+        return [SelectElement(label="Error: chyba", value="")]
         try:
             self._init_clients()
             components = self._components_client.list()
