@@ -227,16 +227,16 @@ class Component(ComponentBase):
                     logging.error("Unexpected type for configurations in component "
                                   f"{component_id}: {type(configurations)}")
 
-            select_elements = []
+            # select_elements = []
             for component_id, configs in raw_configs.items():
                 for config in configs:
-                    select_elements.append(
-                        SelectElement(
-                            label=f"[Component ID - {component_id}] [Config ID - {config['id']}] {config['name']}",
-                            value=f"{component_id}|{config['id']}"
-                        )
+                    # select_elements.append(
+                    return SelectElement(
+                        label=f"[Component ID - {component_id}] [Config ID - {config['id']}] {config['name']}",
+                        value=f"{component_id}|{config['id']}"
                     )
-            return select_elements
+                    # )
+            # return select_elements
 
         except KeyError as e:
             logging.error(f"KeyError in processing: {e}")
