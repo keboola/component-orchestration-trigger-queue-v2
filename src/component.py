@@ -62,6 +62,7 @@ class Component(ComponentBase):
     def run(self) -> None:
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
+        self.list_components()
         self._init_clients()
 
         orch_id = params.get(KEY_ORCHESTRATION_ID)
@@ -216,7 +217,6 @@ class Component(ComponentBase):
     @sync_action('list_components')
     def list_components(self):
         self._init_clients()
-        return SelectElement(label="Select component", value="")
         components = self._components_client.list()
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
 
