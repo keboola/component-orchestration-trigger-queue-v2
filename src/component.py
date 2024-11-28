@@ -10,7 +10,6 @@ from keboola.component.sync_actions import SelectElement, ValidationResult
 
 from client import QueueApiClient, QueueApiClientException
 
-
 CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
 
 KEY_SAPI_TOKEN = '#kbcToken'
@@ -213,6 +212,8 @@ class Component(ComponentBase):
 
     @sync_action('list_configurations')
     def list_configurations(self):
+        return SelectElement(label="Select configuration", value="")
+
         self._init_clients()
         components = self._components_client.list()
         raw_configs = {}
