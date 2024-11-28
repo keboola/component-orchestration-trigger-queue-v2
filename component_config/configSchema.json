@@ -190,7 +190,8 @@
               "label": "Re-load components",
               "action": "list_components",
               "autoload": [
-                        "parameters.triggerActionOnFailure"
+                        "parameters.triggerActionOnFailure",
+                        "parameters.actionOnFailureSettings.targetProject"
                     ]
             }
           },
