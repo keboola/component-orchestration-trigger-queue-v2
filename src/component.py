@@ -56,8 +56,8 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
-        # self._runner_client: QueueApiClient
-        # self._configurations_client: Configurations
+        self._runner_client: QueueApiClient
+        self._configurations_client: Configurations
 
     def run(self) -> None:
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
@@ -215,15 +215,13 @@ class Component(ComponentBase):
     # taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
     @sync_action('list_components')
     def list_components(self) -> List[SelectElement]:
-        return [SelectElement(label="Errorchyba", value="test_value")]
-
-    # try:
-    #    self._init_clients()
-    #    components = self._components_client.list()
-    #    return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
-    # except Exception as e:
-    #    logging.info(f"Error: {e}")
-    #    return [SelectElement(label="Error: chyba", value="")]
+        try:
+            self._init_clients()
+            components = self._components_client.list()
+            return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
+        except Exception as e:
+            logging.info(f"Error: {e}")
+            return [SelectElement(label="Error: chyba", value="")]
 
     @sync_action('list_configurations')
     def list_configurations(self):
