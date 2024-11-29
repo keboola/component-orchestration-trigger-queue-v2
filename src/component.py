@@ -217,8 +217,6 @@ class Component(ComponentBase):
     def list_components(self) -> List[SelectElement]:
         return [SelectElement(label="Errorchyba", value="test_value")]
 
-
-
     # try:
     #    self._init_clients()
     #    components = self._components_client.list()
