@@ -165,6 +165,9 @@
             "type": "object",
             "title": "Action on failure settings",
             "propertyOrder": 47,
+            "required": [
+              "failureConfigurationId"
+            ],
             "properties": {
                 "targetProject": {
                     "type": "string",
@@ -176,22 +179,23 @@
                     "options": {
                         "enum_titles": [
                             "Current Project",
-                            "Destination Project (where the orchestration is running)"
+                            "Destination Project (where the orchestration runs)"
                         ]
-                    }
+                    },
+                    "description": "Project where the action will be triggered. "
                 },
                 "failureConfigurationId": {
                   "type": "integer",
-                  "title": "Orchestration ID",
-                  "propertyOrder": 30,
+                  "title": "Action",
                   "enum": [],
                   "format": "select",
                   "options": {
                       "async": {
-                          "label": "Re-load orchestrations",
+                          "label": "Re-load actions",
                           "action": "list_configurations"
                       }
                   },
+                  "description": "List of actions from selected project. Needs to refresh after changing the job location.",
                   "uniqueItems": true
                 },
                 "failureVariables": {
