@@ -1,9 +1,8 @@
 import logging
-from typing import Optional, List
+from typing import Optional
 
 import requests
 from kbcstorage.configurations import Configurations
-from kbcstorage.components import Components
 from keboola.component.base import ComponentBase, sync_action
 from keboola.component.exceptions import UserException
 from keboola.component.sync_actions import SelectElement, ValidationResult
@@ -24,7 +23,6 @@ KEY_FAIL_ON_WARNING = "failOnWarning"
 KEY_TRIGGER_ACTION_ON_FAILURE = "triggerOrchestrationOnFailure"
 KEY_ACTION_ON_FAILURE_SETTINGS = "actionOnFailureSettings"
 KEY_TARGET_PROJECT = "targetProject"
-KEY_FAILURE_COMPONENT_ID = "failureComponentId"
 KEY_CONFIGURATION_ID_ON_FAILURE = "failureOrchestrationId"
 KEY_VARIABLES_ON_FAILURE = "failureVariables"
 
@@ -89,7 +87,7 @@ class Component(ComponentBase):
 
                     job_to_trigger = params.get(
                         KEY_ACTION_ON_FAILURE_SETTINGS, {}
-                    ).get(KEY_CONFIGURATION_ID_ON_FAILURE).split("|")
+                    ).get(KEY_CONFIGURATION_ID_ON_FAILURE)
 
                     variables_on_failure = params.get(
                         KEY_ACTION_ON_FAILURE_SETTINGS, {}
@@ -98,10 +96,9 @@ class Component(ComponentBase):
 
                     try:
                         logging.warning("Orchestration failed, triggering action with configration ID "
-                                        f"{job_to_trigger[1]}")
-                        action_on_failure_run = self._runner_client.run_job(
-                            job_to_trigger[0],
-                            job_to_trigger[1],
+                                        f"{job_to_trigger}")
+                        action_on_failure_run = self._runner_client.run_orchestration(
+                            job_to_trigger,
                             variables_on_failure
                         )
                         status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
@@ -143,9 +140,9 @@ class Component(ComponentBase):
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
         if project == "current":
             token = self.environment_variables.token
-            self._components_client = Components(stack_url, token, 'default')
+            self._configurations_on_failure_client = Configurations(stack_url, token, 'default')
         else:
-            self._components_client = Components(stack_url, sapi_token, 'default')
+            self._configurations_on_failure_client = Configurations(stack_url, sapi_token, 'default')
 
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
@@ -211,55 +208,11 @@ class Component(ComponentBase):
         configurations = self._configurations_client.list('keboola.orchestrator')
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
 
-    # V principu můžře být list configurací obří a bylo by to nepřehledné v jednoom,
-    # taky to možná hitovalo OOM sync akce, a určitě by to neprošlo přes timeout
-    @sync_action('list_components')
-    def list_components(self) -> List[SelectElement]:
-        try:
-            self._init_clients()
-            components = self._components_client.list()
-            return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in components]
-        except Exception as e:
-            logging.info(f"Error: {e}")
-            return [SelectElement(label="Error: chyba", value="")]
-
     @sync_action('list_configurations')
     def list_configurations(self):
-        params = self.configuration.parameters
         self._init_clients()
-        component_id = params.get(KEY_FAILURE_COMPONENT_ID)
-        if not component_id:
-            raise UserException("Component ID must be provided!")
-        raw_configs = {}
-        try:
-            configurations = self._configurations_client.list(component_id)
-
-            if isinstance(configurations, list):
-                raw_configs[component_id] = configurations
-
-            # TODO tohle je asi zbytečné
-            else:
-                logging.error("Unexpected type for configurations in component "
-                              f"{component_id}: {type(configurations)}")
-
-            select_elements = []
-            for component_id, configs in raw_configs.items():
-                for config in configs:
-                    select_elements.append(
-                        SelectElement(
-                            label=f"{config['name']} -[{config['id']}]",
-                            value=f"{config['id']}"
-                        )
-                    )
-            return select_elements
-
-        except KeyError as e:
-            # validation result nejde raisovat
-            return ValidationResult(f"Error: Missing key {e}")
-
-        except Exception as e:
-            # validation result nejde raisovat
-            return ValidationResult(f"Error: {e}")
+        configurations = self._configurations_on_failure_client.list('keboola.orchestrator')
+        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
