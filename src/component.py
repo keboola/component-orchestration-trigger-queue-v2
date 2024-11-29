@@ -102,11 +102,14 @@ class Component(ComponentBase):
                         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
                         if project == "current":
                             current_project_id = self.environment_variables.project_id
+                            project_name = self.environment_variables.project_name
                             logging.warning("Orchestration failed, triggering action with job ID "
-                                            f"{action_on_failure_run.get('id')} in project {current_project_id}")
+                                            f"{action_on_failure_run.get('id')} in "
+                                            f"{project_name} [{current_project_id}]")
                         else:
                             logging.warning("Orchestration failed, triggering action with job ID "
-                                            f"{action_on_failure_run.get('id')}")
+                                            f"{action_on_failure_run.get('id')} in "
+                                            f"destination project [{self._get_project_id()}]")
 
                         status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
                         logging.info("Action triggered on failure finished")
