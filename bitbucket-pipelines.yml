@@ -8,7 +8,7 @@ pipelines:
           - docker
         script:
           - export APP_IMAGE=keboola-component
-          - export TAG=${BITBUCKET_BRANCH//\//-}"-A"
+          - export TAG=${BITBUCKET_BRANCH//\//-}"-B"
           - docker build . --tag=$APP_IMAGE
           - docker images
           - docker -v

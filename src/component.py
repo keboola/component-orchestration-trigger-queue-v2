@@ -56,8 +56,8 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
-        self._runner_client: QueueApiClient
-        self._configurations_client: Configurations
+        # self._runner_client: QueueApiClient
+        # self._configurations_client: Configurations
 
     def run(self) -> None:
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
