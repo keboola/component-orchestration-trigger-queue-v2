@@ -20,7 +20,7 @@ KEY_VARIABLES = "variables"
 KEY_VARIABLE_NAME = "name"
 KEY_VARIABLE_VALUE = "value"
 KEY_FAIL_ON_WARNING = "failOnWarning"
-KEY_TRIGGER_ACTION_ON_FAILURE = "triggerOrchestrationOnFailure"
+KEY_TRIGGER_ACTION_ON_FAILURE = "triggerActionOnFailure"
 KEY_ACTION_ON_FAILURE_SETTINGS = "actionOnFailureSettings"
 KEY_TARGET_PROJECT = "targetProject"
 KEY_CONFIGURATION_ID_ON_FAILURE = "failureOrchestrationId"
@@ -69,7 +69,6 @@ class Component(ComponentBase):
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
         fail_on_warning = params.get(KEY_FAIL_ON_WARNING, True)
-        trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
 
         try:
             orchestration_run = self._runner_client.run_orchestration(orch_id, variables)
@@ -82,6 +81,7 @@ class Component(ComponentBase):
             try:
                 logging.info("Waiting till orchestration is finished")
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
+                trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
                 if trigger_action_on_failure and status.lower() != "success":
                     logging.info("Orchestration is finished")
 
@@ -95,12 +95,12 @@ class Component(ComponentBase):
                     check_variables(variables_on_failure)
 
                     try:
-                        logging.warning("Orchestration failed, triggering action with configration ID "
-                                        f"{job_to_trigger}")
                         action_on_failure_run = self._runner_client.run_orchestration(
                             job_to_trigger,
                             variables_on_failure
                         )
+                        logging.warning("Orchestration failed, triggering action with job ID "
+                                        f"{action_on_failure_run.get('id')}")
                         status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
                         logging.info("Action triggered on failure finished")
                         self.process_status(status_on_failure, fail_on_warning)
