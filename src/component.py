@@ -112,12 +112,13 @@ class Component(ComponentBase):
                         logging.info("Action triggered on failure finished")
                         jobs_ids = [orchestration_run.get('id'), action_on_failure_run.get('id')]
                         project_ids = [self.environment_variables.project_id, self._get_project_id()]
+                        is_current_project = True if project == "current" else False
                         self.process_action_status(
                             status_on_failure,
                             fail_on_warning,
                             jobs_ids,
                             project_ids,
-                            project
+                            is_current_project
                         )
 
                     except QueueApiClientException as api_exc:
