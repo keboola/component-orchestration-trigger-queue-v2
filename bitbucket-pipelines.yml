@@ -8,7 +8,7 @@ pipelines:
           - docker
         script:
           - export APP_IMAGE=keboola-component
-          - export TAG=${BITBUCKET_BRANCH//\//-}
+          - export TAG=${BITBUCKET_BRANCH//\//-}"-"${GITHUB_JOB_ID}
           - docker build . --tag=$APP_IMAGE
           - docker images
           - docker -v
