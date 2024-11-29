@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 
 import requests
 from kbcstorage.configurations import Configurations
@@ -99,11 +99,26 @@ class Component(ComponentBase):
                             job_to_trigger,
                             variables_on_failure
                         )
-                        logging.warning("Orchestration failed, triggering action with job ID "
-                                        f"{action_on_failure_run.get('id')}")
+                        project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
+                        if project == "current":
+                            current_project_id = self.environment_variables.project_id
+                            logging.warning("Orchestration failed, triggering action with job ID "
+                                            f"{action_on_failure_run.get('id')} in project {current_project_id}")
+                        else:
+                            logging.warning("Orchestration failed, triggering action with job ID "
+                                            f"{action_on_failure_run.get('id')}")
+
                         status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
                         logging.info("Action triggered on failure finished")
-                        self.process_status(status_on_failure, fail_on_warning)
+                        jobs_ids = [orchestration_run.get('id'), action_on_failure_run.get('id')]
+                        project_ids = [self.environment_variables.project_id, self._get_project_id()]
+                        self.process_action_status(
+                            status_on_failure,
+                            fail_on_warning,
+                            jobs_ids,
+                            project_ids,
+                            project
+                        )
 
                     except QueueApiClientException as api_exc:
                         raise UserException("Action triggered on failure failed on: "
@@ -201,6 +216,29 @@ class Component(ComponentBase):
             logging.warning("Orchestration ended in a warning")
         elif status.lower() != "success":
             raise UserException(f"Orchestration did not end in success, ended in {status}")
+
+    @staticmethod
+    def process_action_status(status: str, fail_on_warning: bool, job_ids: List[str], project_ids: List[str],
+                              current_project: bool) -> None:
+        if not fail_on_warning and status.lower() == "warning":
+            if not current_project:
+                logging.warning(f"Orchestration with job ID {job_ids[0]} failed. "
+                                f"According to the configuration, the action with job ID {job_ids[1]}"
+                                " was triggered and ended with warning")
+            else:
+                logging.warning(f"Orchestration with job ID {job_ids[0]} from project {project_ids[0]} failed. "
+                                f"According to the configuration, the action with job ID {job_ids[1]}"
+                                f" from project {project_ids[1]} was triggered and ended with warning")
+
+        elif status.lower() != "success":
+            if not current_project:
+                raise UserException(f"Orchestration with job ID {job_ids[0]} failed. "
+                                    f"According to the configuration, the action with job ID {job_ids[1]} was triggered"
+                                    f" and ended with {status}")
+            else:
+                raise UserException(f"Orchestration with job ID {job_ids[0]} from project {project_ids[0]} failed. "
+                                    f"According to the configuration, the action with job ID {job_ids[1]} from project"
+                                    f" {project_ids[1]} was triggered and ended with {status}")
 
     @sync_action('list_orchestrations')
     def list_orchestration(self):
