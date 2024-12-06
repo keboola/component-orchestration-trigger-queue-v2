@@ -75,7 +75,8 @@ class Component(ComponentBase):
         except QueueApiClientException as api_exc:
             raise UserException(api_exc) from api_exc
 
-        logging.info(f"Orchestration run started with job ID {orchestration_run.get('id')}")
+        logging.info(f"Orchestration run started with job ID {orchestration_run.get('id')} and "
+                     f"configuration ID {orch_id}")
 
         if wait_until_finish:
             try:
@@ -104,12 +105,12 @@ class Component(ComponentBase):
                             current_project_id = self.environment_variables.project_id
                             logging.warning("Orchestration failed, triggering action with job ID "
                                             f"{action_on_failure_run.get('id')} and "
-                                            f"configuration ID {job_to_trigger} in "
+                                            f"configuration ID {str(job_to_trigger)} in "
                                             f"project {current_project_id}")
                         else:
                             logging.warning("Orchestration failed, triggering action with job ID "
                                             f"{action_on_failure_run.get('id')} and "
-                                            f"configuration ID {job_to_trigger} in "
+                                            f"configuration ID {str(job_to_trigger)} in "
                                             f"project {self._get_project_id()}")
 
                         status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
@@ -230,26 +231,27 @@ class Component(ComponentBase):
         if not fail_on_warning and status.lower() == "warning":
             if not current_project:
                 logging.warning(f"Orchestration with job ID {jobs_ids[0]} and "
-                                f"configuration ID {configurations_ids[0]} failed. "
+                                f"configuration ID {str(configurations_ids[0])} failed. "
                                 f"According to the configuration, the action with job ID {jobs_ids[1]} "
-                                f"and configuration ID {configurations_ids[1]} was triggered and ended with warning")
+                                f"and configuration ID {str(configurations_ids[1])} was "
+                                "triggered and ended with warning")
             else:
-                logging.warning(f"Orchestration with job ID {jobs_ids[0]} and configuration ID {configurations_ids[0]} "
-                                f"from project {project_ids[0]} failed. "
+                logging.warning(f"Orchestration with job ID {jobs_ids[0]} and configuration ID "
+                                f"{str(configurations_ids[0])} from project {project_ids[0]} failed. "
                                 f"According to the configuration, the action with job ID {jobs_ids[1]} and "
-                                f"configuration ID {configurations_ids[1]} from project {project_ids[1]} was "
+                                f"configuration ID {str(configurations_ids[1])} from project {project_ids[1]} was "
                                 "triggered and ended with warning")
 
         elif status.lower() != "success":
             if not current_project:
                 raise UserException(f"Orchestration with job ID {jobs_ids[0]} failed. "
                                     f"According to the configuration, the action with job ID {jobs_ids[1]} and "
-                                    f"configuration ID {configurations_ids[1]} was triggered"
+                                    f"configuration ID {str(configurations_ids[1])} was triggered"
                                     f" and ended with {status}")
             else:
                 raise UserException(f"Orchestration with job ID {jobs_ids[0]} from project {project_ids[0]} failed. "
                                     f"According to the configuration, the action with job ID {jobs_ids[1]} and "
-                                    f"configuration ID {configurations_ids[1]} from project"
+                                    f"configuration ID {str(configurations_ids[1])} from project"
                                     f" {project_ids[1]} was triggered and ended with {status}")
 
     @sync_action('list_orchestrations')
