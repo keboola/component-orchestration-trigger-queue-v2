@@ -193,8 +193,7 @@
                             "Current Project",
                             "Destination Project"
                         ]
-                    },
-                    "description": "Project where the action will be triggered. "
+                    }
                 },
                 "failureConfigurationId": {
                   "type": "integer",
@@ -214,7 +213,7 @@
                     "type": "boolean",
                     "format": "checkbox",
                     "title": "Pass Main Flow Variables",
-                    "description": "Pass all variables from the main flow to this one."
+                    "description": "Pass all variables from the main flow to this one. They will be processed along with the variables defined below."
                 },
                 "failureVariables": {
                     "type": "array",
@@ -242,7 +241,7 @@
                     "format": "grid-strict",
                     "title": "Token Validation",
                     "options": {
-                        "tooltip": "Validate token and display metadata about the flow. You may optionally save the results in the configuration for better convenience."
+                        "tooltip": "Validate token of the flow triggered on failure and display metadata. You may optionally save the results in the configuration for better convenience."
                     },
                     "properties": {
                         "sync_trigger_metadata_on_failure": {
@@ -256,7 +255,7 @@
                             },
                             "propertyOrder": 1
                         },
-                        "store_info": {
+                        "store_on_failure_info": {
                             "title": "Store Metadata in configuration",
                             "type": "boolean",
                             "format": "checkbox",
@@ -272,7 +271,7 @@
                             "options": {
                                 "grid_columns": 2,
                                 "dependencies": {
-                                    "store_info": true
+                                    "store_on_failure_info": true
                                 }
                             },
                             "type": "string"
@@ -283,7 +282,7 @@
                             "options": {
                                 "grid_columns": 12,
                                 "dependencies": {
-                                    "store_info": true
+                                    "store_on_failure_info": true
                                 }
                             },
                             "propertyOrder": 5
