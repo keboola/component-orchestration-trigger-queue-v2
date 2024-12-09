@@ -42,6 +42,20 @@ class QueueApiClient(HttpClient):
         self._handle_http_error(response)
         return json.loads(response.text)
 
+    def token_validity_check(self) -> str:
+        response = self.get_raw(endpoint_path="tokens")
+        response.raise_for_status()
+        is_expired = json.loads(response.text).get("isExpired")
+        is_disabled = json.loads(response.text).get("isDisabled")
+
+        if is_expired:
+            return "Token is expired"
+
+        if is_disabled:
+            return "Token is disabled"
+
+        return "Token is valid"
+
     def wait_until_job_finished(self, job_id: str) -> str:
         is_finished = False
         while not is_finished:
@@ -61,11 +75,12 @@ class QueueApiClient(HttpClient):
             response.raise_for_status()
         except requests.HTTPError as e:
             response_error = json.loads(e.response.text)
-            if response_error.get('code') == 400:
-                raise QueueApiClientException(
-                    f"{response_error.get('error')}. Exception code {response_error.get('code')}.\n"
-                    f"Make sure the Orchestration ID set is a Orchestration V2, "
-                    f"follow the documentation to find out what type of orchestration your project is using") from e
+            #  Old Orchestration V2 error handling
+            #  if response_error.get('code') == 400:
+            #      raise QueueApiClientException(
+            #          f"{response_error.get('error')}. Exception code {response_error.get('code')}.\n"
+            #          f"Make sure the Orchestration ID set is a Orchestration V2, "
+            #          f"follow the documentation to find out what type of orchestration your project is using") from e
             raise QueueApiClientException(
                 f"{response_error.get('error')}. Exception code {response_error.get('code')}") from e
 
