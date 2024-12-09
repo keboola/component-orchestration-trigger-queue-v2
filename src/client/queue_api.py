@@ -10,6 +10,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 QUEUE_V2_URL = "https://queue.{STACK}keboola.com"
 CLOUD_URL = "https://queue.{STACK}.keboola.cloud"
+TOKENS_URL = "https://connection.keboola.com/v2/storage/tokens/verify"
 
 
 class QueueApiClientException(Exception):
@@ -43,7 +44,7 @@ class QueueApiClient(HttpClient):
         return json.loads(response.text)
 
     def token_validity_check(self) -> str:
-        response = self.get_raw(endpoint_path="tokens")
+        response = self.get_raw(endpoint_path=TOKENS_URL, is_absolute_path=True)
         response.raise_for_status()
         is_expired = json.loads(response.text).get("isExpired")
         is_disabled = json.loads(response.text).get("isDisabled")
