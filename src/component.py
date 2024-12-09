@@ -55,6 +55,7 @@ class Component(ComponentBase):
     def __init__(self):
         super().__init__()
         self._runner_client: QueueApiClient
+        self._failure_action_runner_client: QueueApiClient
         self._configurations_client: Configurations
 
     def run(self) -> None:
@@ -96,7 +97,7 @@ class Component(ComponentBase):
                     check_variables(variables_on_failure)
 
                     try:
-                        action_on_failure_run = self._runner_client.run_orchestration(
+                        action_on_failure_run = self._failure_action_runner_client.run_orchestration(
                             job_to_trigger,
                             variables_on_failure
                         )
@@ -162,10 +163,20 @@ class Component(ComponentBase):
         stack_url = get_stack_url(stack, custom_stack)
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
         if project == "current":
+            # TODO: nezapomenout odkomentovat a dát pryč logging tokenů
             token = self.environment_variables.token
+            logging.info(f"Action failure Token: {token}")
             self._configurations_on_failure_client = Configurations(stack_url, token, 'default')
+            try:
+                self._failure_action_runner_client = QueueApiClient(token, stack, custom_stack)
+                logging.info("Using current project for action on failure")
+            except QueueApiClientException as api_exc:
+                raise UserException(api_exc) from api_exc
         else:
+            logging.info(f"Action failure Token: {sapi_token}")
             self._configurations_on_failure_client = Configurations(stack_url, sapi_token, 'default')
+            self._failure_action_runner_client = self._runner_client
+            logging.info("Using target project for action on failure")
 
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
