@@ -175,7 +175,6 @@ class Component(ComponentBase):
             except QueueApiClientException as api_exc:
                 raise UserException(api_exc) from api_exc
         else:
-            logging.info(f"Action failure Token: {sapi_token}")
             self._configurations_on_failure_client = Configurations(stack_url, sapi_token, 'default')
             self._failure_action_runner_client = self._runner_client
             logging.info(f"Project is set to current project with {self._get_project_id()}")
