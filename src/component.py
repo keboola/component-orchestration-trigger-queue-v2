@@ -25,6 +25,7 @@ KEY_ACTION_ON_FAILURE_SETTINGS = "actionOnFailureSettings"
 KEY_TARGET_PROJECT = "targetProject"
 KEY_CONFIGURATION_ID_ON_FAILURE = "failureConfigurationId"
 KEY_VARIABLES_ON_FAILURE = "failureVariables"
+KEY_PASS_VARIABLES = "passVariables"
 
 REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
@@ -91,10 +92,17 @@ class Component(ComponentBase):
                         KEY_ACTION_ON_FAILURE_SETTINGS, {}
                     ).get(KEY_CONFIGURATION_ID_ON_FAILURE)
 
+                    pass_variables_of_main_flow = params.get(
+                        KEY_ACTION_ON_FAILURE_SETTINGS, {}
+                    ).get(KEY_PASS_VARIABLES, [])
+
                     variables_on_failure = params.get(
                         KEY_ACTION_ON_FAILURE_SETTINGS, {}
                     ).get(KEY_VARIABLES_ON_FAILURE, [])
                     check_variables(variables_on_failure)
+
+                    if pass_variables_of_main_flow:
+                        variables_on_failure.extend(variables)
 
                     try:
                         action_on_failure_run = self._failure_action_runner_client.run_orchestration(
