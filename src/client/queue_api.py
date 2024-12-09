@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from typing import Dict, Optional, List
 
@@ -46,6 +47,7 @@ class QueueApiClient(HttpClient):
         is_finished = False
         while not is_finished:
             try:
+                logging.info(f"Checking job {job_id} to finish")
                 is_finished = self.get(endpoint_path=f"jobs/{job_id}").get("isFinished")
             except HTTPError as http_err:
                 raise QueueApiClientException(http_err) from http_err
