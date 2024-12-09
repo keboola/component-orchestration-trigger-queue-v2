@@ -76,16 +76,16 @@ class Component(ComponentBase):
         except QueueApiClientException as api_exc:
             raise UserException(api_exc) from api_exc
 
-        logging.info(f"Orchestration run started with job ID {orchestration_run.get('id')} and "
+        logging.info(f"Flow run started with job ID {orchestration_run.get('id')} and "
                      f"configuration ID {orch_id}")
 
         if wait_until_finish:
             try:
-                logging.info("Waiting till orchestration is finished")
+                logging.info("Waiting till flow is finished")
                 status = self._runner_client.wait_until_job_finished(orchestration_run.get('id'))
                 trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
                 if trigger_action_on_failure and status.lower() != "success":
-                    logging.info("Orchestration is finished")
+                    logging.info("Flow is finished")
 
                     job_to_trigger = params.get(
                         KEY_ACTION_ON_FAILURE_SETTINGS, {}
@@ -104,12 +104,12 @@ class Component(ComponentBase):
                         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
                         if project == "current":
                             current_project_id = self.environment_variables.project_id
-                            logging.warning("Orchestration failed, triggering action with job ID "
+                            logging.warning("Flow failed, triggering flow with job ID "
                                             f"{action_on_failure_run.get('id')} and "
                                             f"configuration ID {str(job_to_trigger)} in "
                                             f"project {current_project_id}")
                         else:
-                            logging.warning("Orchestration failed, triggering action with job ID "
+                            logging.warning("Flow failed, triggering flow with job ID "
                                             f"{action_on_failure_run.get('id')} and "
                                             f"configuration ID {str(job_to_trigger)} in "
                                             f"project {self._get_project_id()}")
@@ -117,7 +117,7 @@ class Component(ComponentBase):
                         status_on_failure = self._failure_action_runner_client.wait_until_job_finished(
                             action_on_failure_run.get('id')
                         )
-                        logging.info("Action triggered on failure finished")
+                        logging.info("Flow triggered on failure finished")
                         jobs_ids = [orchestration_run.get('id'), action_on_failure_run.get('id')]
                         configurations_ids = [orch_id, job_to_trigger]
                         project_ids = [self.environment_variables.project_id, self._get_project_id()]
@@ -132,18 +132,18 @@ class Component(ComponentBase):
                         )
 
                     except QueueApiClientException as api_exc:
-                        raise UserException("Action triggered on failure failed on: "
+                        raise UserException("Flow triggered on failure failed on: "
                                             f"{api_exc}") from api_exc
                 else:
-                    logging.info("Orchestration is finished")
+                    logging.info("Flow is finished")
                     self.process_status(status, fail_on_warning)
 
             except QueueApiClientException as api_exc:
-                raise UserException(f"Orchestration run failed on: {api_exc}") from api_exc
+                raise UserException(f"Flow run failed on: {api_exc}") from api_exc
 
         else:
-            logging.info("Orchestration is being run. if you require the trigger to wait "
-                         "till the orchestraion is finished, specify this in the configuration")
+            logging.info("Flow is being run. if you require the trigger to wait "
+                         "till the flow is finished, specify this in the configuration")
 
     def _init_clients(self):
         params = self.configuration.parameters
@@ -229,35 +229,35 @@ class Component(ComponentBase):
     @staticmethod
     def process_status(status: str, fail_on_warning: bool) -> None:
         if not fail_on_warning and status.lower() == "warning":
-            logging.warning("Orchestration ended in a warning")
+            logging.warning("Flow ended in a warning")
         elif status.lower() != "success":
-            raise UserException(f"Orchestration did not end in success, ended in {status}")
+            raise UserException(f"Flow did not end in success, ended in {status}")
 
     @staticmethod
     def process_action_status(status: str, fail_on_warning: bool, jobs_ids: List[str], configurations_ids: List[str],
                               project_ids: List[str], current_project: bool) -> None:
         if not fail_on_warning:
             if not current_project:
-                logging.warning(f"Orchestration with job ID {jobs_ids[0]} and "
+                logging.warning(f"Flow with job ID {jobs_ids[0]} and "
                                 f"configuration ID {str(configurations_ids[0])} failed. "
-                                f"According to the configuration, the action with job ID {jobs_ids[1]} "
+                                f"According to the configuration, the flow with job ID {jobs_ids[1]} "
                                 f"and configuration ID {str(configurations_ids[1])} was "
                                 f"triggered and ended with {status}")
             else:
-                logging.warning(f"Orchestration with job ID {jobs_ids[0]} and configuration ID "
+                logging.warning(f"Flow with job ID {jobs_ids[0]} and configuration ID "
                                 f"{str(configurations_ids[0])} from project {project_ids[0]} failed. "
-                                f"According to the configuration, the action with job ID {jobs_ids[1]} and "
+                                f"According to the configuration, the flow with job ID {jobs_ids[1]} and "
                                 f"configuration ID {str(configurations_ids[1])} from project {project_ids[1]} was "
                                 f"triggered and ended with {status}")
         else:
             if not current_project:
-                raise UserException(f"Orchestration with job ID {jobs_ids[0]} failed. "
-                                    f"According to the configuration, the action with job ID {jobs_ids[1]} and "
+                raise UserException(f"Flow with job ID {jobs_ids[0]} failed. "
+                                    f"According to the configuration, the flow with job ID {jobs_ids[1]} and "
                                     f"configuration ID {str(configurations_ids[1])} was triggered"
                                     f" and ended with {status}")
             else:
-                raise UserException(f"Orchestration with job ID {jobs_ids[0]} from project {project_ids[0]} failed. "
-                                    f"According to the configuration, the action with job ID {jobs_ids[1]} and "
+                raise UserException(f"Flow with job ID {jobs_ids[0]} from project {project_ids[0]} failed. "
+                                    f"According to the configuration, the flow with job ID {jobs_ids[1]} and "
                                     f"configuration ID {str(configurations_ids[1])} from project"
                                     f" {project_ids[1]} was triggered and ended with {status}")
 
@@ -303,10 +303,33 @@ class Component(ComponentBase):
         #                    configuration=current_cfg['configuration'], changeDescription='Update Trigger Metadata')
 
         info_message = f"""
-- **Project Name:**       `{self.environment_variables.project_name}`
-- **Project ID:**         `{self._get_project_id()}`
-- **Orchestration Name:** `{orchestration_cfg['name']}`
-- **Orchestration Link:** [{orchestration_url}]({orchestration_url})
+- **Token Validity:** `{self._runner_client.token_validity_check()}`
+- **Project ID:** `{self._get_project_id()}`
+- **Flow Name:** `{orchestration_cfg['name']}`
+- **Flow Link:** [{orchestration_url}]({orchestration_url})
+        """
+        return ValidationResult(info_message)
+
+    @sync_action('sync_trigger_metadata_on_failure')
+    def sync_trigger_metadata_on_failure(self):
+        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+        params = self.configuration.parameters
+        self._init_clients()
+        flow_id = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
+        target_project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
+        stack = params.get(KEY_STACK)
+        custom_stack = params.get(KEY_CUSTOM_STACK, "")
+        stack_url = get_stack_url(stack, custom_stack)
+        current_project = self.environment_variables.project_id
+        project_id = current_project if target_project == "current" else self._get_project_id()
+        orchestration_url = f"{stack_url}/admin/projects/{project_id}/flows/{flow_id}"
+        orchestration_cfg = self._configurations_on_failure_client.detail('keboola.orchestrator', str(flow_id))
+
+        info_message = f"""
+- **Token Validity:** `{self._failure_action_runner_client.token_validity_check()}`
+- **Project ID:** `{project_id}`
+- **Flow Name:** `{orchestration_cfg['name']}`
+- **Flow Link:** [{orchestration_url}]({orchestration_url})
         """
         return ValidationResult(info_message)
 

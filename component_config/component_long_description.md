@@ -1,1 +1,1 @@
-This application allows you to run orchestrations V2 across different Keboola Connection projects.
+This application allows you to run flows across different Keboola Connection projects.
