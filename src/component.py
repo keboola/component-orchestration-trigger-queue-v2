@@ -236,21 +236,20 @@ class Component(ComponentBase):
     @staticmethod
     def process_action_status(status: str, fail_on_warning: bool, jobs_ids: List[str], configurations_ids: List[str],
                               project_ids: List[str], current_project: bool) -> None:
-        if not fail_on_warning and status.lower() == "warning":
+        if not fail_on_warning:
             if not current_project:
                 logging.warning(f"Orchestration with job ID {jobs_ids[0]} and "
                                 f"configuration ID {str(configurations_ids[0])} failed. "
                                 f"According to the configuration, the action with job ID {jobs_ids[1]} "
                                 f"and configuration ID {str(configurations_ids[1])} was "
-                                "triggered and ended with warning")
+                                f"triggered and ended with {status}")
             else:
                 logging.warning(f"Orchestration with job ID {jobs_ids[0]} and configuration ID "
                                 f"{str(configurations_ids[0])} from project {project_ids[0]} failed. "
                                 f"According to the configuration, the action with job ID {jobs_ids[1]} and "
                                 f"configuration ID {str(configurations_ids[1])} from project {project_ids[1]} was "
-                                "triggered and ended with warning")
-
-        elif status.lower() != "success":
+                                f"triggered and ended with {status}")
+        else:
             if not current_project:
                 raise UserException(f"Orchestration with job ID {jobs_ids[0]} failed. "
                                     f"According to the configuration, the action with job ID {jobs_ids[1]} and "
