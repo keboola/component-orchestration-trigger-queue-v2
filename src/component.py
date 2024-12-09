@@ -104,21 +104,19 @@ class Component(ComponentBase):
                         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
                         if project == "current":
                             current_project_id = self.environment_variables.project_id
-                            logging.info(f"Project where the action on failure will run: {current_project_id}")
                             logging.warning("Orchestration failed, triggering action with job ID "
                                             f"{action_on_failure_run.get('id')} and "
                                             f"configuration ID {str(job_to_trigger)} in "
                                             f"project {current_project_id}")
-                            logging.info(f"Queue API response: {action_on_failure_run}")
                         else:
-                            logging.info(f"Project where the action on failure will run: {self._get_project_id()}")
                             logging.warning("Orchestration failed, triggering action with job ID "
                                             f"{action_on_failure_run.get('id')} and "
                                             f"configuration ID {str(job_to_trigger)} in "
                                             f"project {self._get_project_id()}")
-                            logging.info(f"Queue API response: {action_on_failure_run}")
 
-                        status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
+                        status_on_failure = self._failure_action_runner_client.wait_until_job_finished(
+                            action_on_failure_run.get('id')
+                        )
                         logging.info("Action triggered on failure finished")
                         jobs_ids = [orchestration_run.get('id'), action_on_failure_run.get('id')]
                         configurations_ids = [orch_id, job_to_trigger]
@@ -171,13 +169,11 @@ class Component(ComponentBase):
             self._configurations_on_failure_client = Configurations(stack_url, token, 'default')
             try:
                 self._failure_action_runner_client = QueueApiClient(token, stack, custom_stack)
-                logging.info(f"Project is set to current project with {self.environment_variables.project_id}")
             except QueueApiClientException as api_exc:
                 raise UserException(api_exc) from api_exc
         else:
             self._configurations_on_failure_client = Configurations(stack_url, sapi_token, 'default')
             self._failure_action_runner_client = self._runner_client
-            logging.info(f"Project is set to current project with {self._get_project_id()}")
 
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
