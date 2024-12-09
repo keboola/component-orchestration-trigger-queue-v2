@@ -104,19 +104,19 @@ class Component(ComponentBase):
                         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
                         if project == "current":
                             current_project_id = self.environment_variables.project_id
-                            logging.info(f"Project: {current_project_id}")
+                            logging.info(f"Project where the action on failure will run: {current_project_id}")
                             logging.warning("Orchestration failed, triggering action with job ID "
                                             f"{action_on_failure_run.get('id')} and "
                                             f"configuration ID {str(job_to_trigger)} in "
                                             f"project {current_project_id}")
-                            logging.info(action_on_failure_run)
+                            logging.info(f"Queue API response: {action_on_failure_run}")
                         else:
-                            logging.info(f"Project: {self._get_project_id()}")
+                            logging.info(f"Project where the action on failure will run: {self._get_project_id()}")
                             logging.warning("Orchestration failed, triggering action with job ID "
                                             f"{action_on_failure_run.get('id')} and "
                                             f"configuration ID {str(job_to_trigger)} in "
                                             f"project {self._get_project_id()}")
-                            logging.info(action_on_failure_run)
+                            logging.info(f"Queue API response: {action_on_failure_run}")
 
                         status_on_failure = self._runner_client.wait_until_job_finished(action_on_failure_run.get('id'))
                         logging.info("Action triggered on failure finished")
