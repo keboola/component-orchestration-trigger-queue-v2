@@ -2,16 +2,18 @@
     "type": "object",
     "title": "Parameters",
     "required": [
-        "waitUntilFinish",
-        "#kbcToken",
-        "kbcUrl",
-        "orchestrationId"
+        "waitUntilFinish"
     ],
     "properties": {
         "flowSettings": {
             "type": "object",
             "title": "Flow settings",
             "propertyOrder": 1,
+            "required": [
+                "#kbcToken",
+                "kbcUrl",
+                "orchestrationId"
+            ],
             "properties": {
                 "#kbcToken": {
                     "type": "string",
@@ -21,16 +23,15 @@
                     "propertyOrder": 10,
                     "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
                 },
-                "validateToken": {
+                "sync_trigger_metadata": {
                     "type": "button",
                     "format": "sync-action",
-                    "title": "Validate token",
                     "propertyOrder": 15,
                     "options": {
-                        "async": {
-                            "label": "VALIDATE",
-                            "action": "sync_trigger_metadata"
-                        }
+                      "async": {
+                        "label": "VALIDATE TOKEN",
+                        "action": "sync_trigger_metadata"
+                      }
                     }
                 },
                 "kbcUrl": {
