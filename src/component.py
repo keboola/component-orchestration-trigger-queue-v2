@@ -11,6 +11,7 @@ from client import QueueApiClient, QueueApiClientException
 
 CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
 
+KEY_FLOW_SETTINGS = "flowSettings"
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
 KEY_CUSTOM_STACK = "custom_stack"
@@ -64,9 +65,9 @@ class Component(ComponentBase):
         params = self.configuration.parameters
         self._init_clients()
 
-        orch_id = params.get(KEY_ORCHESTRATION_ID)
+        orch_id = params.get(KEY_FLOW_SETTINGS).get(KEY_ORCHESTRATION_ID)
 
-        variables = params.get(KEY_VARIABLES, [])
+        variables = params.get(KEY_FLOW_SETTINGS).get(KEY_VARIABLES, [])
         check_variables(variables)
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
@@ -155,9 +156,9 @@ class Component(ComponentBase):
 
     def _init_clients(self):
         params = self.configuration.parameters
-        sapi_token = params.get(KEY_SAPI_TOKEN)
-        stack = params.get(KEY_STACK)
-        custom_stack = params.get(KEY_CUSTOM_STACK, "")
+        sapi_token = params.get(KEY_FLOW_SETTINGS).get(KEY_SAPI_TOKEN)
+        stack = params.get(KEY_FLOW_SETTINGS).get(KEY_STACK)
+        custom_stack = params.get(KEY_FLOW_SETTINGS).get(KEY_CUSTOM_STACK, "")
         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
 
         if not sapi_token:
@@ -286,9 +287,9 @@ class Component(ComponentBase):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         self._init_clients()
-        orch_id = params.get(KEY_ORCHESTRATION_ID)
-        stack = params.get(KEY_STACK)
-        custom_stack = params.get(KEY_CUSTOM_STACK, "")
+        orch_id = params.get(KEY_FLOW_SETTINGS).get(KEY_ORCHESTRATION_ID)
+        stack = params.get(KEY_FLOW_SETTINGS).get(KEY_STACK)
+        custom_stack = params.get(KEY_FLOW_SETTINGS).get(KEY_CUSTOM_STACK, "")
         # token = self.environment_variables.token
         # config_id = self.environment_variables.config_id
         stack_url = get_stack_url(stack, custom_stack)
@@ -325,8 +326,8 @@ class Component(ComponentBase):
         self._init_clients()
         flow_id = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
         target_project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
-        stack = params.get(KEY_STACK)
-        custom_stack = params.get(KEY_CUSTOM_STACK, "")
+        stack = params.get(KEY_FLOW_SETTINGS).get(KEY_STACK)
+        custom_stack = params.get(KEY_FLOW_SETTINGS).get(KEY_CUSTOM_STACK, "")
         stack_url = get_stack_url(stack, custom_stack)
         current_project = self.environment_variables.project_id
         project_id = current_project if target_project == "current" else self._get_project_id()
@@ -342,7 +343,7 @@ class Component(ComponentBase):
         return ValidationResult(info_message)
 
     def _get_project_id(self) -> str:
-        return self.configuration.parameters.get(KEY_SAPI_TOKEN, '').split('-')[0]
+        return self.configuration.parameters.get(KEY_FLOW_SETTINGS).get(KEY_SAPI_TOKEN, '').split('-')[0]
 
 
 if __name__ == "__main__":
