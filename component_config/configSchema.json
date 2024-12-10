@@ -2,141 +2,105 @@
     "type": "object",
     "title": "Parameters",
     "required": [
-        "#kbcToken",
-        "kbcUrl",
-        "orchestrationId",
         "waitUntilFinish"
     ],
     "properties": {
-        "#kbcToken": {
-            "type": "string",
-            "title": "KBC Storage API token",
-            "format": "password",
-            "minLength": 1,
-            "propertyOrder": 10,
-            "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
-        },
-        "kbcUrl": {
-            "title": "KBC Stack",
-            "type": "string",
-            "enum": [
-                "",
-                "us-east4.gcp.",
-                "eu-central-1.",
-                "north-europe.azure.",
-                "europe-west3.gcp.",
-                "Custom Stack"
-            ],
-            "options": {
-                "enum_titles": [
-                    "US Virginia AWS - connection.keboola.com",
-                    "US Virginia GCP - connection.us-east4.gcp.keboola.com",
-                    "EU Frankfurt AWS - connection.eu-central-1.keboola.com",
-                    "EU Ireland Azure - connection.north-europe.azure.keboola.com",
-                    "EU Frankfurt GCP - connection.europe-west3.gcp.keboola.com",
-                    "Custom Stack"
-                ]
-            },
-            "propertyOrder": 20
-        },
-        "custom_stack": {
-            "title": "Custom Stack",
-            "type": "string",
-            "propertyOrder": 25,
-            "description": "The name of your stack in connection.{CUSTOM_STACK}.keboola.cloud",
-            "options": {
-                "dependencies": {
-                    "kbcUrl": "Custom Stack"
-                }
-            }
-        },
-        "orchestrationId": {
-            "type": "integer",
-            "title": "Flow ID",
-            "propertyOrder": 30,
-            "enum": [],
-            "format": "select",
-            "options": {
-                "async": {
-                    "label": "RE-LOAD FLOWS",
-                    "action": "list_orchestrations"
-                }
-            },
-            "uniqueItems": true
-        },
-        "variables": {
-            "type": "array",
-            "propertyOrder": 50,
-            "format": "table",
-            "title": "Variables",
-            "uniqueItems": true,
-            "items": {
-                "type": "object",
-                "title": "Variable",
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "value": {
-                        "type": "string"
-                    }
-                }
-            },
-            "options": {
-                "tooltip": "Variables that will be passed to the flow."
-            }
-        },
-        "trigger_metadata": {
+        "flowSettings": {
             "type": "object",
-            "format": "grid-strict",
-            "title": "Token Validation",
-            "propertyOrder": 55,
-            "options": {
-                "tooltip": "Validate token and display metadata about the flow. You may optionally save the results in the configuration for better convenience."
-            },
+            "title": "Flow settings",
+            "required": [
+                "#kbcToken",
+                "kbcUrl",
+                "orchestrationId"
+            ],
+            "propertyOrder": 1,
             "properties": {
-                "sync_trigger_metadata": {
+                "#kbcToken": {
+                    "type": "string",
+                    "title": "KBC Storage API token",
+                    "format": "password",
+                    "minLength": 1,
+                    "propertyOrder": 10,
+                    "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
+                },
+                "validateToken": {
                     "type": "button",
                     "format": "sync-action",
+                    "title": "Validate token",
+                    "propertyOrder": 15,
                     "options": {
                         "async": {
                             "label": "VALIDATE",
                             "action": "sync_trigger_metadata"
                         }
-                    },
-                    "propertyOrder": 1
-                },
-                "store_info": {
-                    "title": "Store Metadata in configuration",
-                    "type": "boolean",
-                    "format": "checkbox",
-                    "propertyOrder": 2,
-                    "options": {
-                        "grid_columns": 10,
-                        "grid_break": true
                     }
                 },
-                "project_id": {
-                    "title": "Project ID",
-                    "propertyOrder": 4,
-                    "options": {
-                        "grid_columns": 2,
-                        "dependencies": {
-                            "store_info": true
-                        }
-                    },
-                    "type": "string"
-                },
-                "orchestration_link": {
-                    "title": "Flow link",
+                "kbcUrl": {
+                    "title": "KBC Stack",
                     "type": "string",
+                    "enum": [
+                        "",
+                        "us-east4.gcp.",
+                        "eu-central-1.",
+                        "north-europe.azure.",
+                        "europe-west3.gcp.",
+                        "Custom Stack"
+                    ],
                     "options": {
-                        "grid_columns": 12,
+                        "enum_titles": [
+                            "US Virginia AWS - connection.keboola.com",
+                            "US Virginia GCP - connection.us-east4.gcp.keboola.com",
+                            "EU Frankfurt AWS - connection.eu-central-1.keboola.com",
+                            "EU Ireland Azure - connection.north-europe.azure.keboola.com",
+                            "EU Frankfurt GCP - connection.europe-west3.gcp.keboola.com",
+                            "Custom Stack"
+                        ]
+                    },
+                    "propertyOrder": 20
+                },
+                "custom_stack": {
+                    "title": "Custom Stack",
+                    "type": "string",
+                    "propertyOrder": 25,
+                    "description": "The name of your stack in connection.{CUSTOM_STACK}.keboola.cloud",
+                    "options": {
                         "dependencies": {
-                            "store_info": true
+                            "kbcUrl": "Custom Stack"
+                        }
+                    }
+                },
+                "orchestrationId": {
+                    "type": "integer",
+                    "title": "Flow ID",
+                    "propertyOrder": 30,
+                    "enum": [],
+                    "format": "select",
+                    "options": {
+                        "async": {
+                            "label": "RE-LOAD FLOWS",
+                            "action": "list_orchestrations"
                         }
                     },
-                    "propertyOrder": 5
+                    "uniqueItems": true
+                },
+                "variables": {
+                    "type": "array",
+                    "propertyOrder": 50,
+                    "format": "table",
+                    "title": "Variables of the flow",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "object",
+                        "title": "Variable",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -197,7 +161,7 @@
                 },
                 "failureConfigurationId": {
                   "type": "integer",
-                  "title": "Flow",
+                  "title": "Flow ID",
                   "enum": [],
                   "format": "select",
                   "options": {
@@ -218,7 +182,7 @@
                 "failureVariables": {
                     "type": "array",
                     "format": "table",
-                    "title": "Variables",
+                    "title": "Variables of the flow on failure",
                     "uniqueItems": true,
                     "items": {
                         "type": "object",
@@ -230,62 +194,6 @@
                             "value": {
                                 "type": "string"
                             }
-                        }
-                    },
-                    "options": {
-                        "tooltip": "Flow on failure specific variables."
-                    }
-                },
-                "triggerMetadataOnFailure": {
-                    "type": "object",
-                    "format": "grid-strict",
-                    "title": "Token Validation",
-                    "options": {
-                        "tooltip": "Validate token of the flow triggered on failure and display metadata. You may optionally save the results in the configuration for better convenience."
-                    },
-                    "properties": {
-                        "sync_trigger_metadata_on_failure": {
-                            "type": "button",
-                            "format": "sync-action",
-                            "options": {
-                                "async": {
-                                    "label": "VALIDATE",
-                                    "action": "sync_trigger_metadata_on_failure"
-                                }
-                            },
-                            "propertyOrder": 1
-                        },
-                        "store_on_failure_info": {
-                            "title": "Store Metadata in configuration",
-                            "type": "boolean",
-                            "format": "checkbox",
-                            "propertyOrder": 2,
-                            "options": {
-                                "grid_columns": 10,
-                                "grid_break": true
-                            }
-                        },
-                        "project_id": {
-                            "title": "Project ID",
-                            "propertyOrder": 4,
-                            "options": {
-                                "grid_columns": 2,
-                                "dependencies": {
-                                    "store_on_failure_info": true
-                                }
-                            },
-                            "type": "string"
-                        },
-                        "orchestration_link": {
-                            "title": "Flow link",
-                            "type": "string",
-                            "options": {
-                                "grid_columns": 12,
-                                "dependencies": {
-                                    "store_on_failure_info": true
-                                }
-                            },
-                            "propertyOrder": 5
                         }
                     }
                 }
