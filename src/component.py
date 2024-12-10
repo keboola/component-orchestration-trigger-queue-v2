@@ -28,7 +28,7 @@ KEY_CONFIGURATION_ID_ON_FAILURE = "failureConfigurationId"
 KEY_VARIABLES_ON_FAILURE = "failureVariables"
 KEY_PASS_VARIABLES = "passVariables"
 
-REQUIRED_PARAMETERS = [f"{KEY_FLOW_SETTINGS}.{KEY_SAPI_TOKEN}", f"{KEY_FLOW_SETTINGS}.{KEY_ORCHESTRATION_ID}"]
+#  REQUIRED_PARAMETERS = [f"{KEY_FLOW_SETTINGS}.{KEY_SAPI_TOKEN}", f"{KEY_FLOW_SETTINGS}.{KEY_ORCHESTRATION_ID}"]
 REQUIRED_IMAGE_PARS = []
 
 STACK_URL = "https://connection.{STACK}keboola.com"
@@ -61,7 +61,7 @@ class Component(ComponentBase):
         self._configurations_client: Configurations
 
     def run(self) -> None:
-        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+        #  self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         self._init_clients()
 
@@ -284,7 +284,7 @@ class Component(ComponentBase):
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
-        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+        #  self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         self._init_clients()
         orch_id = params.get(KEY_FLOW_SETTINGS).get(KEY_ORCHESTRATION_ID)
@@ -321,7 +321,7 @@ class Component(ComponentBase):
 
     @sync_action('sync_trigger_metadata_on_failure')
     def sync_trigger_metadata_on_failure(self):
-        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+        #  self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         self._init_clients()
         flow_id = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
