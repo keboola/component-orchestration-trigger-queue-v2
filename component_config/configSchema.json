@@ -2,17 +2,15 @@
     "type": "object",
     "title": "Parameters",
     "required": [
-        "waitUntilFinish"
+        "waitUntilFinish",
+        "#kbcToken",
+        "kbcUrl",
+        "orchestrationId"
     ],
     "properties": {
         "flowSettings": {
             "type": "object",
             "title": "Flow settings",
-            "required": [
-                "#kbcToken",
-                "kbcUrl",
-                "orchestrationId"
-            ],
             "propertyOrder": 1,
             "properties": {
                 "#kbcToken": {
