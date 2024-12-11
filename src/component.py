@@ -296,6 +296,19 @@ class Component(ComponentBase):
         orchestration_url = f"{stack_url}/admin/projects/{self._get_project_id()}/flows/{orch_id}"
         orchestration_cfg = self._configurations_client.detail('keboola.orchestrator', str(orch_id))
 
+        trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
+        flow_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
+        orchestration_cfg_on_failure = self._configurations_on_failure_client.detail(
+            'keboola.orchestrator', str(flow_on_failure)
+        )
+        project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
+        if project == "current":
+            target_project = self.environment_variables.project_id
+        else:
+            target_project = self._get_project_id()
+
+        orchestration_url_on_failure = f"{stack_url}/admin/projects/{target_project}/flows/{flow_on_failure}"
+
         # TODO: enable when UI forwards ConfigID
         # client = Configurations(stack_url, token, self.environment_variables.branch_id)
 
@@ -310,35 +323,17 @@ class Component(ComponentBase):
         #
         # self.update_config(token, stack_url, CURRENT_COMPONENT_ID, config_id, current_cfg['name'],
         #                    configuration=current_cfg['configuration'], changeDescription='Update Trigger Metadata')
-
-        info_message = f"""
-- **Token Validity:** `{self._runner_client.token_validity_check()}`
-- **Project ID:** `{self._get_project_id()}`
-- **Flow Name:** `{orchestration_cfg['name']}`
-- **Flow Link:** [{orchestration_url}]({orchestration_url})
-        """
-        return ValidationResult(info_message)
-
-    @sync_action('sync_trigger_metadata_on_failure')
-    def sync_trigger_metadata_on_failure(self):
-        #  self.validate_configuration_parameters(REQUIRED_PARAMETERS)
-        params = self.configuration.parameters
-        self._init_clients()
-        flow_id = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
-        target_project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
-        stack = params.get(KEY_FLOW_SETTINGS).get(KEY_STACK)
-        custom_stack = params.get(KEY_FLOW_SETTINGS).get(KEY_CUSTOM_STACK, "")
-        stack_url = get_stack_url(stack, custom_stack)
-        current_project = self.environment_variables.project_id
-        project_id = current_project if target_project == "current" else self._get_project_id()
-        orchestration_url = f"{stack_url}/admin/projects/{project_id}/flows/{flow_id}"
-        orchestration_cfg = self._configurations_on_failure_client.detail('keboola.orchestrator', str(flow_id))
-
-        info_message = f"""
-- **Token Validity:** `{self._failure_action_runner_client.token_validity_check()}`
-- **Project ID:** `{project_id}`
-- **Flow Name:** `{orchestration_cfg['name']}`
-- **Flow Link:** [{orchestration_url}]({orchestration_url})
+        if trigger_action_on_failure:
+            info_message = f"""
+This configuration triggers this flow [{orchestration_cfg['name']}]({orchestration_url}) in
+project `{self._get_project_id()}`.
+If the flow fails, it will trigger flow [{orchestration_cfg_on_failure['name']}]({orchestration_url_on_failure})
+ in poject {target_project}.
+"""
+        else:
+            info_message = f"""
+This configuration triggers this flow [{orchestration_cfg['name']}]({orchestration_url}) in
+project `{self._get_project_id()}`.
         """
         return ValidationResult(info_message)
 

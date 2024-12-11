@@ -23,17 +23,6 @@
                     "propertyOrder": 10,
                     "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
                 },
-                "sync_trigger_metadata": {
-                    "type": "button",
-                    "format": "sync-action",
-                    "propertyOrder": 15,
-                    "options": {
-                      "async": {
-                        "label": "VALIDATE TOKEN",
-                        "action": "sync_trigger_metadata"
-                      }
-                    }
-                },
                 "kbcUrl": {
                     "title": "KBC Stack",
                     "type": "string",
@@ -200,6 +189,23 @@
             "options": {
                 "dependencies": {
                     "triggerActionOnFailure": true
+                }
+            }
+        },
+        "trigger_metadata": {
+            "type": "object",
+            "title": "Trigger Info",
+            "format": "grid-strict",
+            "properties": {
+                "sync_trigger_metadata": {
+                    "type": "button",
+                    "format": "sync-action",
+                    "options": {
+                        "async": {
+                          "label": "SHOW INFO",
+                          "action": "sync_trigger_metadata"
+                        }
+                    }
                 }
             }
         }
