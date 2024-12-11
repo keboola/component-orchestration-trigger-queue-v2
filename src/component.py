@@ -175,7 +175,7 @@ class Component(ComponentBase):
             if params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT) == "current":
                 token_on_failure = self.environment_variables.token
                 stack_on_failure = self.environment_variables.stack_id
-                stack_url_on_failure = self.environment_variables.url.replace('v2/storage/','')
+                stack_url_on_failure = self.environment_variables.url.replace('v2/storage/', '')
                 custom_stack_on_failure = ''
 
                 self._target_project_on_failure = self.environment_variables.project_id
