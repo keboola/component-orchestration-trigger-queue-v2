@@ -43,20 +43,6 @@ class QueueApiClient(HttpClient):
         self._handle_http_error(response)
         return json.loads(response.text)
 
-    def token_validity_check(self) -> str:
-        response = self.get_raw(endpoint_path=TOKENS_URL, is_absolute_path=True)
-        response.raise_for_status()
-        is_expired = json.loads(response.text).get("isExpired")
-        is_disabled = json.loads(response.text).get("isDisabled")
-
-        if is_expired:
-            return "Token is expired"
-
-        if is_disabled:
-            return "Token is disabled"
-
-        return "Token is valid"
-
     def wait_until_job_finished(self, job_id: str) -> str:
         is_finished = False
         while not is_finished:
