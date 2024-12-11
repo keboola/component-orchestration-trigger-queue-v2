@@ -10,6 +10,7 @@ from keboola.component.sync_actions import SelectElement, ValidationResult
 from client import QueueApiClient, QueueApiClientException
 
 CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
+FLOW_COMPONENT_ID = "keboola.orchestrator"
 
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
@@ -55,6 +56,7 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
+        self._target_project_on_failure = None
         self._runner_client: QueueApiClient
         self._failure_action_runner_client: QueueApiClient
         self._configurations_client: Configurations
@@ -158,31 +160,42 @@ class Component(ComponentBase):
         sapi_token = params.get(KEY_SAPI_TOKEN)
         stack = params.get(KEY_STACK)
         custom_stack = params.get(KEY_CUSTOM_STACK, "")
-        project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
 
         if not sapi_token:
             raise UserException("Storage API token must be provided!")
         if stack is None:
             raise UserException("Stack must be provided!")
 
-        try:
-            self._runner_client = QueueApiClient(sapi_token, stack, custom_stack)
-        except QueueApiClientException as api_exc:
-            raise UserException(api_exc) from api_exc
-
         stack_url = get_stack_url(stack, custom_stack)
+
+        self._runner_client = self._get_clients(custom_stack, sapi_token, stack)
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
 
-        if project == "current":
-            token = self.environment_variables.token
-            self._configurations_on_failure_client = Configurations(stack_url, token, 'default')
-            try:
-                self._failure_action_runner_client = QueueApiClient(token, stack, custom_stack)
-            except QueueApiClientException as api_exc:
-                raise UserException(api_exc) from api_exc
-        else:
-            self._configurations_on_failure_client = Configurations(stack_url, sapi_token, 'default')
-            self._failure_action_runner_client = self._runner_client
+        if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
+            if params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT) == "current":
+                token_on_failure = self.environment_variables.token
+                stack_on_failure = self.environment_variables.stack_id
+                stack_url_on_failure = self.environment_variables.url.replace('v2/storage/','')
+                custom_stack_on_failure = ''
+
+                self._target_project_on_failure = self.environment_variables.project_id
+                self._configurations_on_failure_client = Configurations(stack_url_on_failure,
+                                                                        token_on_failure,
+                                                                        'default')
+                self._failure_action_runner_client = self._get_clients(custom_stack_on_failure,
+                                                                       token_on_failure,
+                                                                       stack_on_failure)
+            else:
+                self._target_project_on_failure = self._get_project_id()
+                self._configurations_on_failure_client = self._configurations_client
+                self._failure_action_runner_client = self._runner_client
+
+    @staticmethod
+    def _get_clients(custom_stack, sapi_token, stack):
+        try:
+            return QueueApiClient(sapi_token, stack, custom_stack)
+        except QueueApiClientException as api_exc:
+            raise UserException(api_exc) from api_exc
 
     @staticmethod
     def update_config(token: str, stack_url, component_id, configurationId, name, description=None, configuration=None,
@@ -274,13 +287,13 @@ class Component(ComponentBase):
     @sync_action('list_orchestrations')
     def list_orchestration(self):
         self._init_clients()
-        configurations = self._configurations_client.list('keboola.orchestrator')
+        configurations = self._configurations_client.list(FLOW_COMPONENT_ID)
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
 
     @sync_action('list_configurations')
     def list_configurations(self):
         self._init_clients()
-        configurations = self._configurations_on_failure_client.list('keboola.orchestrator')
+        configurations = self._configurations_on_failure_client.list(FLOW_COMPONENT_ID)
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
 
     @sync_action('sync_trigger_metadata')
@@ -288,47 +301,30 @@ class Component(ComponentBase):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         self._init_clients()
-        orch_id = params.get(KEY_ORCHESTRATION_ID)
+        flow_id = params.get(KEY_ORCHESTRATION_ID)
         stack = params.get(KEY_STACK)
         custom_stack = params.get(KEY_CUSTOM_STACK, "")
-        # token = self.environment_variables.token
-        # config_id = self.environment_variables.config_id
         stack_url = get_stack_url(stack, custom_stack)
-        orchestration_url = f"{stack_url}/admin/projects/{self._get_project_id()}/flows/{orch_id}"
-        orchestration_cfg = self._configurations_client.detail('keboola.orchestrator', str(orch_id))
+        flow_url = self._compose_flow_url(flow_id, stack_url, self._get_project_id())
+        flow_cfg = self._configurations_client.detail(FLOW_COMPONENT_ID, str(flow_id))
 
-        # TODO: enable when UI forwards ConfigID
-        # client = Configurations(stack_url, token, self.environment_variables.branch_id)
+        info_message = (f"This configuration triggers flow named [{flow_cfg['name']}]({flow_url}) "
+                        f"in project `{self._get_project_id()}`.")
 
-        # current_cfg = client.detail(CURRENT_COMPONENT_ID, config_id)
-        #
-        # current_cfg['configuration']['parameters']['trigger_metadata'] = {}
-        # current_cfg['configuration']['parameters']['trigger_metadata'][
-        #     'project_name'] = self.environment_variables.project_name
-        # current_cfg['configuration']['parameters']['trigger_metadata']['project_id'] = self._get_project_id()
-        #
-        # current_cfg['configuration']['parameters']['trigger_metadata']['orchestration_link'] = orchestration_url
-        #
-        # self.update_config(token, stack_url, CURRENT_COMPONENT_ID, config_id, current_cfg['name'],
-        #                    configuration=current_cfg['configuration'], changeDescription='Update Trigger Metadata')
+        if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
+            flow_id_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
+            flow_cfg_on_failure = self._configurations_on_failure_client.detail(FLOW_COMPONENT_ID,
+                                                                                str(flow_id_on_failure))
 
-        trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
-        if trigger_action_on_failure:
-            flow_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
-            orchestration_cfg_on_failure = self._configurations_on_failure_client.detail(
-                'keboola.orchestrator', str(flow_on_failure)
-            )
-            project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
-            if project == "current":
-                target_project = self.environment_variables.project_id
-            else:
-                target_project = self._get_project_id()
-
-            orchestration_url_on_failure = f"{stack_url}/admin/projects/{target_project}/flows/{flow_on_failure}"
-            info_message = f"This configuration triggers flow named [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`. If the flow fails, it will trigger flow [{orchestration_cfg_on_failure['name']}]({orchestration_url_on_failure}) in poject {target_project}."  # noqa E501
-        else:
-            info_message = f"This configuration triggers flow named [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`."  # noqa E501
+            flow_url_on_failure = self._compose_flow_url(flow_id_on_failure, stack_url, self._target_project_on_failure)
+            info_message += (f" If the flow fails, it will trigger flow [{flow_cfg_on_failure['name']}]"
+                             f"({flow_url_on_failure}) in project {self._target_project_on_failure}.")
         return ValidationResult(info_message)
+
+    @staticmethod
+    def _compose_flow_url(flow_id, stack_url, project_id):
+        orchestration_url = f"{stack_url}/admin/projects/{project_id}/flows/{flow_id}"
+        return orchestration_url
 
     def _get_project_id(self) -> str:
         return self.configuration.parameters.get(KEY_SAPI_TOKEN, '').split('-')[0]
