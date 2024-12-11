@@ -325,9 +325,9 @@ class Component(ComponentBase):
                 target_project = self._get_project_id()
 
             orchestration_url_on_failure = f"{stack_url}/admin/projects/{target_project}/flows/{flow_on_failure}"
-            info_message = f"This configuration triggers flow [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`. If the flow fails, it will trigger flow [{orchestration_cfg_on_failure['name']}]({orchestration_url_on_failure}) in poject `{target_project}`."  # noqa E501
+            info_message = f"This configuration triggers flow named [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`. If the flow fails, it will trigger flow [{orchestration_cfg_on_failure['name']}]({orchestration_url_on_failure}) in poject {target_project}."  # noqa E501
         else:
-            info_message = f"This configuration triggers flow [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`."  # noqa E501
+            info_message = f"This configuration triggers flow named [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`."  # noqa E501
         return ValidationResult(info_message)
 
     def _get_project_id(self) -> str:
