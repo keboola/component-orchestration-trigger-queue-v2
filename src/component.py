@@ -11,7 +11,6 @@ from client import QueueApiClient, QueueApiClientException
 
 CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
 
-KEY_FLOW_SETTINGS = "flowSettings"
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
 KEY_CUSTOM_STACK = "custom_stack"
@@ -28,7 +27,7 @@ KEY_CONFIGURATION_ID_ON_FAILURE = "failureConfigurationId"
 KEY_VARIABLES_ON_FAILURE = "failureVariables"
 KEY_PASS_VARIABLES = "passVariables"
 
-#  REQUIRED_PARAMETERS = [f"{KEY_FLOW_SETTINGS}.{KEY_SAPI_TOKEN}", f"{KEY_FLOW_SETTINGS}.{KEY_ORCHESTRATION_ID}"]
+REQUIRED_PARAMETERS = [KEY_SAPI_TOKEN, KEY_ORCHESTRATION_ID]
 REQUIRED_IMAGE_PARS = []
 
 STACK_URL = "https://connection.{STACK}keboola.com"
@@ -61,13 +60,13 @@ class Component(ComponentBase):
         self._configurations_client: Configurations
 
     def run(self) -> None:
-        #  self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         self._init_clients()
 
-        orch_id = params.get(KEY_FLOW_SETTINGS).get(KEY_ORCHESTRATION_ID)
+        orch_id = params.get(KEY_ORCHESTRATION_ID)
 
-        variables = params.get(KEY_FLOW_SETTINGS).get(KEY_VARIABLES, [])
+        variables = params.get(KEY_VARIABLES, [])
         check_variables(variables)
 
         wait_until_finish = params.get(KEY_WAIT_UNTIL_FINISH, False)
@@ -156,9 +155,9 @@ class Component(ComponentBase):
 
     def _init_clients(self):
         params = self.configuration.parameters
-        sapi_token = params.get(KEY_FLOW_SETTINGS).get(KEY_SAPI_TOKEN)
-        stack = params.get(KEY_FLOW_SETTINGS).get(KEY_STACK)
-        custom_stack = params.get(KEY_FLOW_SETTINGS).get(KEY_CUSTOM_STACK, "")
+        sapi_token = params.get(KEY_SAPI_TOKEN)
+        stack = params.get(KEY_STACK)
+        custom_stack = params.get(KEY_CUSTOM_STACK, "")
         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
 
         if not sapi_token:
@@ -173,6 +172,7 @@ class Component(ComponentBase):
 
         stack_url = get_stack_url(stack, custom_stack)
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
+
         if project == "current":
             token = self.environment_variables.token
             self._configurations_on_failure_client = Configurations(stack_url, token, 'default')
@@ -206,6 +206,7 @@ class Component(ComponentBase):
         Raises:
             requests.HTTPError: If the API request fails.
         """
+        logging.info(f"Updating configuration {configurationId} in component {component_id}")
 
         if not branch_id:
             url = f'{stack_url}/v2/storage/components/{component_id}/configs/{configurationId}'
@@ -284,30 +285,17 @@ class Component(ComponentBase):
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
-        #  self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         self._init_clients()
-        orch_id = params.get(KEY_FLOW_SETTINGS).get(KEY_ORCHESTRATION_ID)
-        stack = params.get(KEY_FLOW_SETTINGS).get(KEY_STACK)
-        custom_stack = params.get(KEY_FLOW_SETTINGS).get(KEY_CUSTOM_STACK, "")
+        orch_id = params.get(KEY_ORCHESTRATION_ID)
+        stack = params.get(KEY_STACK)
+        custom_stack = params.get(KEY_CUSTOM_STACK, "")
         # token = self.environment_variables.token
         # config_id = self.environment_variables.config_id
         stack_url = get_stack_url(stack, custom_stack)
         orchestration_url = f"{stack_url}/admin/projects/{self._get_project_id()}/flows/{orch_id}"
         orchestration_cfg = self._configurations_client.detail('keboola.orchestrator', str(orch_id))
-
-        trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
-        flow_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
-        orchestration_cfg_on_failure = self._configurations_on_failure_client.detail(
-            'keboola.orchestrator', str(flow_on_failure)
-        )
-        project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
-        if project == "current":
-            target_project = self.environment_variables.project_id
-        else:
-            target_project = self._get_project_id()
-
-        orchestration_url_on_failure = f"{stack_url}/admin/projects/{target_project}/flows/{flow_on_failure}"
 
         # TODO: enable when UI forwards ConfigID
         # client = Configurations(stack_url, token, self.environment_variables.branch_id)
@@ -323,22 +311,27 @@ class Component(ComponentBase):
         #
         # self.update_config(token, stack_url, CURRENT_COMPONENT_ID, config_id, current_cfg['name'],
         #                    configuration=current_cfg['configuration'], changeDescription='Update Trigger Metadata')
+
+        trigger_action_on_failure = params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False)
         if trigger_action_on_failure:
-            info_message = f"""
-This configuration triggers this flow [{orchestration_cfg['name']}]({orchestration_url}) in
-project `{self._get_project_id()}`.
-If the flow fails, it will trigger flow [{orchestration_cfg_on_failure['name']}]({orchestration_url_on_failure})
- in poject {target_project}.
-"""
+            flow_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
+            orchestration_cfg_on_failure = self._configurations_on_failure_client.detail(
+                'keboola.orchestrator', str(flow_on_failure)
+            )
+            project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
+            if project == "current":
+                target_project = self.environment_variables.project_id
+            else:
+                target_project = self._get_project_id()
+
+            orchestration_url_on_failure = f"{stack_url}/admin/projects/{target_project}/flows/{flow_on_failure}"
+            info_message = f"This configuration triggers flow named [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`. If the flow fails, it will trigger flow [{orchestration_cfg_on_failure['name']}]({orchestration_url_on_failure}) in poject {target_project}."  # noqa E501
         else:
-            info_message = f"""
-This configuration triggers this flow [{orchestration_cfg['name']}]({orchestration_url}) in
-project `{self._get_project_id()}`.
-        """
+            info_message = f"This configuration triggers flow named [{orchestration_cfg['name']}]({orchestration_url}) in project `{self._get_project_id()}`."  # noqa E501
         return ValidationResult(info_message)
 
     def _get_project_id(self) -> str:
-        return self.configuration.parameters.get(KEY_FLOW_SETTINGS).get(KEY_SAPI_TOKEN, '').split('-')[0]
+        return self.configuration.parameters.get(KEY_SAPI_TOKEN, '').split('-')[0]
 
 
 if __name__ == "__main__":
