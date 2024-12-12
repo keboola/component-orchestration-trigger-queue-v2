@@ -178,7 +178,11 @@ class Component(ComponentBase):
                 stack_on_failure = self.environment_variables.stack_id
                 logging.debug(f"Stack on failure: {stack_on_failure}")
                 # env url is different from stack url parameter, needs to be adjusted
-                stack_url_on_failure = self.environment_variables.url.replace('v2/storage/', '')
+                stack_url_on_failure = self.environment_variables.url
+                # remove the storage part from the url
+                stack_url_on_failure = stack_url_on_failure.replace('v2/storage/', '')
+                # by default the component count with the connection.keboola.com as empty string
+                stack_url_on_failure = stack_url_on_failure.replace('connection.keboola.com', '')
                 logging.debug(f"Stack url on failure: {stack_url_on_failure}")
                 # custom stack is not needed in the current project
                 custom_stack_on_failure = ''
