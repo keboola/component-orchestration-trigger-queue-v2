@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from typing import Dict, Optional, List
 
@@ -32,7 +33,7 @@ class QueueApiClient(HttpClient):
 
         if not stack_url.startswith("http://") and not stack_url.startswith("https://"):
             stack_url = "https://" + stack_url
-
+        logging.debug(f"Using stack URL: {stack_url}")
         return stack_url
 
     def run_orchestration(self, orch_id: str, variables: Optional[List[Dict]]) -> Dict:
