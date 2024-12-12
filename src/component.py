@@ -175,7 +175,9 @@ class Component(ComponentBase):
             if params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT) == "current":
                 token_on_failure = self.environment_variables.token
                 stack_on_failure = self.environment_variables.stack_id
+                # env url is different from stack url parameter, needs to be adjusted
                 stack_url_on_failure = self.environment_variables.url.replace('v2/storage/', '')
+                # custom stack is not needed in the current project
                 custom_stack_on_failure = ''
 
                 self._target_project_on_failure = self.environment_variables.project_id
@@ -306,20 +308,31 @@ class Component(ComponentBase):
         custom_stack = params.get(KEY_CUSTOM_STACK, "")
         stack_url = get_stack_url(stack, custom_stack)
         flow_url = self._compose_flow_url(flow_id, stack_url, self._get_project_id())
-        flow_cfg = self._configurations_client.detail(FLOW_COMPONENT_ID, str(flow_id))
+        flow_cfg = self._get_component_detail(self._configurations_client, FLOW_COMPONENT_ID, str(flow_id))
 
         info_message = (f"This configuration triggers flow named [{flow_cfg['name']}]({flow_url}) "
                         f"in project `{self._get_project_id()}`.")
 
         if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
             flow_id_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
-            flow_cfg_on_failure = self._configurations_on_failure_client.detail(FLOW_COMPONENT_ID,
-                                                                                str(flow_id_on_failure))
+            flow_cfg_on_failure = self._get_component_detail(self._configurations_on_failure_client,
+                                                             FLOW_COMPONENT_ID,
+                                                             str(flow_id_on_failure))
 
             flow_url_on_failure = self._compose_flow_url(flow_id_on_failure, stack_url, self._target_project_on_failure)
             info_message += (f" If the flow fails, it will trigger flow [{flow_cfg_on_failure['name']}]"
                              f"({flow_url_on_failure}) in project {self._target_project_on_failure}.")
         return ValidationResult(info_message)
+
+    @staticmethod
+    def _get_component_detail(client: Configurations, component_id: str, configuration_id: str):
+        try:
+            return client.detail(component_id, configuration_id)
+        except requests.HTTPError as e:
+            if e.response.status_code == 404:
+                return {"name": f"Component with id ({configuration_id}) not found!"}
+            else:
+                raise e
 
     @staticmethod
     def _compose_flow_url(flow_id, stack_url, project_id):
