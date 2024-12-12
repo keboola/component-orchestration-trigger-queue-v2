@@ -29,6 +29,10 @@ class QueueApiClient(HttpClient):
             stack_url = CLOUD_URL.replace("{STACK}", custom_stack)
         else:
             stack_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
+
+        if not stack_url.startswith("http://") and not stack_url.startswith("https://"):
+            stack_url = "https://" + stack_url
+
         return stack_url
 
     def run_orchestration(self, orch_id: str, variables: Optional[List[Dict]]) -> Dict:
