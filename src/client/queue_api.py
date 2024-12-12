@@ -31,8 +31,6 @@ class QueueApiClient(HttpClient):
         else:
             stack_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
 
-        if not stack_url.startswith("http://") and not stack_url.startswith("https://"):
-            stack_url = "https://" + stack_url
         logging.debug(f"Using stack URL: {stack_url}")
         return stack_url
 
@@ -67,12 +65,12 @@ class QueueApiClient(HttpClient):
             response.raise_for_status()
         except requests.HTTPError as e:
             response_error = json.loads(e.response.text)
-            #  Old Orchestration V2 error handling
-            #  if response_error.get('code') == 400:
-            #      raise QueueApiClientException(
-            #          f"{response_error.get('error')}. Exception code {response_error.get('code')}.\n"
-            #          f"Make sure the Orchestration ID set is a Orchestration V2, "
-            #          f"follow the documentation to find out what type of orchestration your project is using") from e
+            #  Old Orchestration error handling
+            if response_error.get('code') == 400:
+                raise QueueApiClientException(
+                    f"{response_error.get('error')}. Exception code {response_error.get('code')}.\n"
+                    f"Make sure the Orchestration ID set is a Orchestration V2, "
+                    f"follow the documentation to find out what type of orchestration your project is using") from e
             raise QueueApiClientException(
                 f"{response_error.get('error')}. Exception code {response_error.get('code')}") from e
 
