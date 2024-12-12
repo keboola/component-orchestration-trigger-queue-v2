@@ -321,7 +321,7 @@ class Component(ComponentBase):
 
             flow_url_on_failure = self._compose_flow_url(flow_id_on_failure, stack_url, self._target_project_on_failure)
             info_message += (f" If the flow fails, it will trigger flow [{flow_cfg_on_failure['name']}]"
-                             f"({flow_url_on_failure}) in project {self._target_project_on_failure}.")
+                             f"({flow_url_on_failure}) in project `{self._target_project_on_failure}`.")
         return ValidationResult(info_message)
 
     @staticmethod
