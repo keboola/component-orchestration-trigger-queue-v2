@@ -174,9 +174,9 @@ class Component(ComponentBase):
         if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
             if params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT) == "current":
                 token_on_failure = self.environment_variables.token
-                stack_on_failure = self.environment_variables.stack_id
+                stack_on_failure = self.environment_variables.stack_id.replace('.keboola.com', '')
                 # env url is different from stack url parameter, needs to be adjusted
-                stack_url_on_failure = self.environment_variables.url  # .replace('v2/storage/', '')
+                stack_url_on_failure = self.environment_variables.url.replace('v2/storage/', '')
                 # custom stack is not needed in the current project
                 custom_stack_on_failure = ''
 
