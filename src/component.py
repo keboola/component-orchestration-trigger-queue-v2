@@ -168,7 +168,7 @@ class Component(ComponentBase):
 
         stack_url = get_stack_url(stack, custom_stack)
 
-        self._runner_client = self._get_clients(custom_stack, sapi_token, stack)
+        self._runner_client = self._get_client(custom_stack, sapi_token, stack)
         self._configurations_client = Configurations(stack_url, sapi_token, 'default')
 
         if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
@@ -179,10 +179,11 @@ class Component(ComponentBase):
                 logging.debug(f"Stack on failure: {stack_on_failure}")
                 # env url is different from stack url parameter, needs to be adjusted
                 stack_url_on_failure = self.environment_variables.url
+                # by default the component count with the connection.keboola.com as empty string
+                if 'connection.keboola.com' in stack_url_on_failure:
+                    stack_url_on_failure = ''
                 # remove the storage part from the url
                 stack_url_on_failure = stack_url_on_failure.replace('v2/storage/', '')
-                # by default the component count with the connection.keboola.com as empty string
-                stack_url_on_failure = stack_url_on_failure.replace('connection.keboola.com', '')
                 logging.debug(f"Stack url on failure: {stack_url_on_failure}")
                 # custom stack is not needed in the current project
                 custom_stack_on_failure = ''
@@ -191,17 +192,18 @@ class Component(ComponentBase):
                 self._configurations_on_failure_client = Configurations(stack_url_on_failure,
                                                                         token_on_failure,
                                                                         'default')
-                self._failure_action_runner_client = self._get_clients(custom_stack_on_failure,
-                                                                       token_on_failure,
-                                                                       stack_on_failure)
+                self._failure_action_runner_client = self._get_client(custom_stack_on_failure,
+                                                                      token_on_failure,
+                                                                      stack_on_failure)
             else:
                 self._target_project_on_failure = self._get_project_id()
                 self._configurations_on_failure_client = self._configurations_client
                 self._failure_action_runner_client = self._runner_client
 
     @staticmethod
-    def _get_clients(custom_stack, sapi_token, stack):
+    def _get_client(custom_stack, sapi_token, stack):
         try:
+            logging.debug(f"Getting client for stack {stack} and custom stack {custom_stack}")
             return QueueApiClient(sapi_token, stack, custom_stack)
         except QueueApiClientException as api_exc:
             raise UserException(api_exc) from api_exc
