@@ -56,6 +56,8 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
+        self.stack_url = None
+        self.stack_url_on_failure = None
         self._target_project_on_failure = None
         self._runner_client: QueueApiClient
         self._failure_action_runner_client: QueueApiClient
@@ -166,10 +168,10 @@ class Component(ComponentBase):
         if stack is None:
             raise UserException("Stack must be provided!")
 
-        stack_url = get_stack_url(stack, custom_stack)
+        self.stack_url = get_stack_url(stack, custom_stack)
 
         self._runner_client = self._get_client(custom_stack, sapi_token, stack)
-        self._configurations_client = Configurations(stack_url, sapi_token, 'default')
+        self._configurations_client = Configurations(self.stack_url, sapi_token, 'default')
 
         if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
             if params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT) == "current":
@@ -183,16 +185,16 @@ class Component(ComponentBase):
                 logging.debug(f"Stack on failure: {stack_on_failure}")
 
                 # env url is different from stack url parameter, needs to be adjusted
-                stack_url_on_failure = self.environment_variables.url
+                self.stack_url_on_failure = self.environment_variables.url
                 # remove the storage part from the url
-                stack_url_on_failure = stack_url_on_failure.replace('v2/storage/', '')
-                logging.debug(f"Stack url on failure: {stack_url_on_failure}")
+                self.stack_url_on_failure = self.stack_url_on_failure.replace('v2/storage/', '')
+                logging.debug(f"Stack url on failure: {self.stack_url_on_failure}")
 
                 # custom stack is not needed in the current project
                 custom_stack_on_failure = ''
 
                 self._target_project_on_failure = self.environment_variables.project_id
-                self._configurations_on_failure_client = Configurations(stack_url_on_failure,
+                self._configurations_on_failure_client = Configurations(self.stack_url_on_failure,
                                                                         token_on_failure,
                                                                         'default')
                 self._failure_action_runner_client = self._get_client(custom_stack_on_failure,
@@ -240,9 +242,8 @@ class Component(ComponentBase):
         else:
             url = f'{stack_url}/v2/storage/branch/{branch_id}/components/{component_id}/configs/{configurationId}'
 
-        parameters = {}
+        parameters = {'configurationId': configurationId}
 
-        parameters['configurationId'] = configurationId
         if configuration:
             parameters['configuration'] = configuration
         parameters['name'] = name
@@ -274,6 +275,7 @@ class Component(ComponentBase):
     def process_action_status(status: str, fail_on_warning: bool, jobs_ids: List[str], configurations_ids: List[str],
                               project_ids: List[str], current_project: bool) -> None:
         if not fail_on_warning:
+
             if not current_project:
                 logging.warning(f"Flow with job ID {jobs_ids[0]} and "
                                 f"configuration ID {str(configurations_ids[0])} failed. "
@@ -316,10 +318,8 @@ class Component(ComponentBase):
         params = self.configuration.parameters
         self._init_clients()
         flow_id = params.get(KEY_ORCHESTRATION_ID)
-        stack = params.get(KEY_STACK)
-        custom_stack = params.get(KEY_CUSTOM_STACK, "")
-        stack_url = get_stack_url(stack, custom_stack)
-        flow_url = self._compose_flow_url(flow_id, stack_url, self._get_project_id())
+
+        flow_url = self._compose_flow_url(flow_id, self.stack_url, self._get_project_id())
         flow_cfg = self._get_component_detail(self._configurations_client, FLOW_COMPONENT_ID, str(flow_id))
 
         info_message = (f"This configuration triggers flow named [{flow_cfg['name']}]({flow_url}) "
@@ -331,7 +331,8 @@ class Component(ComponentBase):
                                                              FLOW_COMPONENT_ID,
                                                              str(flow_id_on_failure))
 
-            flow_url_on_failure = self._compose_flow_url(flow_id_on_failure, stack_url, self._target_project_on_failure)
+            flow_url_on_failure = self._compose_flow_url(flow_id_on_failure, self.stack_url_on_failure,
+                                                         self._target_project_on_failure)
             info_message += (f" If the flow fails, it will trigger flow [{flow_cfg_on_failure['name']}]"
                              f"({flow_url_on_failure}) in project `{self._target_project_on_failure}`.")
         return ValidationResult(info_message)
