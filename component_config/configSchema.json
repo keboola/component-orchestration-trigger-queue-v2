@@ -51,7 +51,7 @@
       }
     },
     "orchestrationId": {
-      "type": "integer",
+      "type": "string",
       "title": "Orchestration ID",
       "propertyOrder": 30,
       "enum": [],
