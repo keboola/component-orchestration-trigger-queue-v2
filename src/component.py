@@ -162,7 +162,7 @@ class Component(ComponentBase):
     def list_orchestration(self):
         self._init_clients()
         configurations = self._configurations_client.list('keboola.orchestrator')
-        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=int(c['id'])) for c in configurations]
+        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=str(c['id'])) for c in configurations]
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
