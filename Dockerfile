@@ -13,4 +13,4 @@ COPY /scripts /code/scripts/
 COPY deploy.sh /code/deploy.sh
 
 WORKDIR /code/
-CMD ["python", "-u", "/src/component.py"]
+CMD ["python", "-u", "/code/src/component.py"]
