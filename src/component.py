@@ -43,9 +43,9 @@ def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
     elif keboola_stack == "-":
         stack_url = STACK_URL.replace("{STACK}", "")
 
-    elif any(keboola_stack == stack for stack in VALID_STACKS): 
+    elif any(keboola_stack == stack for stack in VALID_STACKS):
         stack_url = STACK_URL.replace("{STACK}", keboola_stack)
-    
+
     return stack_url
 
 
