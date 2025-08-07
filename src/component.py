@@ -39,10 +39,13 @@ VALID_STACKS = ["", "eu-central-1.", "north-europe.azure.", "us-east4.gcp.", "eu
 def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
     if keboola_stack == "Custom Stack":
         stack_url = CLOUD_STACK_URL.replace("{STACK}", custom_stack)
-    else:
+
+    elif keboola_stack == "-":
+        stack_url = STACK_URL.replace("{STACK}", "")
+
+    elif any(keboola_stack == stack for stack in VALID_STACKS): 
         stack_url = STACK_URL.replace("{STACK}", keboola_stack)
-        if keboola_stack not in VALID_STACKS:
-            raise UserException(f"Invalid stack entered, make sure it is in the list of valid stacks {VALID_STACKS} ")
+    
     return stack_url
 
 

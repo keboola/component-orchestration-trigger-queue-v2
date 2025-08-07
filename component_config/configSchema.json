@@ -20,7 +20,7 @@
             "title": "KBC Stack",
             "type": "string",
             "enum": [
-                "",
+                "-",
                 "us-east4.gcp.",
                 "eu-central-1.",
                 "north-europe.azure.",
@@ -188,6 +188,50 @@
             "title": "Trigger Info",
             "format": "grid-strict",
             "properties": {
+                "project_id": {
+                  "type": "string",
+                  "title": "Project ID",
+                  "options": {
+                    "dependencies": {
+                      "store_info": true
+                    },
+                    "grid_columns": 2
+                  },
+                  "propertyOrder": 4
+                },
+                "store_info": {
+                  "type": "boolean",
+                  "title": "Store Metadata in configuration",
+                  "format": "checkbox",
+                  "options": {
+                    "grid_break": true,
+                    "grid_columns": 10
+                  },
+                  "propertyOrder": 2
+                },
+                "project_name": {
+                  "type": "string",
+                  "title": "Project Name",
+                  "enabled": false,
+                  "options": {
+                    "dependencies": {
+                      "store_info": true
+                    },
+                    "grid_columns": 10
+                  },
+                  "propertyOrder": 3
+                },
+                "orchestration_link": {
+                  "type": "string",
+                  "title": "Orchestration link",
+                  "options": {
+                    "dependencies": {
+                      "store_info": true
+                    },
+                    "grid_columns": 12
+                  },
+                  "propertyOrder": 5
+                },
                 "sync_trigger_metadata": {
                     "type": "button",
                     "format": "sync-action",
