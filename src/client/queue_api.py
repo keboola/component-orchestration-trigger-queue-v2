@@ -28,6 +28,8 @@ class QueueApiClient(HttpClient):
     def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
         if keboola_stack == "Custom Stack":
             stack_url = CLOUD_URL.replace("{STACK}", custom_stack)
+        elif keboola_stack == "-":
+            stack_url = QUEUE_V2_URL.replace("{STACK}", "")
         else:
             stack_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
 
