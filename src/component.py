@@ -310,7 +310,7 @@ class Component(ComponentBase):
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
 
     @sync_action('list_failure_orchestrations')
-    def list_configurations(self):
+    def list_failure_orchestrations(self):
         self._init_clients()
         configurations = self._configurations_on_failure_client.list(FLOW_COMPONENT_ID)
         return [SelectElement(label=f"[{c['id']}] {c['name']}", value=c['id']) for c in configurations]
