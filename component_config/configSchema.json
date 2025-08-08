@@ -146,7 +146,7 @@
                   "options": {
                       "async": {
                           "label": "RE-LOAD FLOWS",
-                          "action": "list_configurations"
+                          "action": "list_failure_orchestrations"
                       }
                   },
                   "description": "List of flows from selected project. Needs to refresh after changing the location settings.",
