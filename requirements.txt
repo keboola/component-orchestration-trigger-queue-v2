@@ -1,4 +1,4 @@
-keboola.component==1.4.3
+keboola.component==1.6.8
 keboola.utils
 keboola.http-client
 mock~=4.0.3

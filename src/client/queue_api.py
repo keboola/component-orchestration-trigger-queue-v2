@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from typing import Dict, Optional, List
 
@@ -10,6 +11,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 QUEUE_V2_URL = "https://queue.{STACK}keboola.com"
 CLOUD_URL = "https://queue.{STACK}.keboola.cloud"
+TOKENS_URL = "https://connection.keboola.com/v2/storage/tokens/verify"
 
 
 class QueueApiClientException(Exception):
@@ -26,8 +28,12 @@ class QueueApiClient(HttpClient):
     def get_stack_url(keboola_stack: str, custom_stack: Optional[str]):
         if keboola_stack == "Custom Stack":
             stack_url = CLOUD_URL.replace("{STACK}", custom_stack)
+        elif keboola_stack == "-":
+            stack_url = QUEUE_V2_URL.replace("{STACK}", "")
         else:
             stack_url = QUEUE_V2_URL.replace("{STACK}", keboola_stack)
+
+        logging.debug(f"Using stack URL: {stack_url}")
         return stack_url
 
     def run_orchestration(self, orch_id: str, variables: Optional[List[Dict]]) -> Dict:
@@ -61,6 +67,7 @@ class QueueApiClient(HttpClient):
             response.raise_for_status()
         except requests.HTTPError as e:
             response_error = json.loads(e.response.text)
+            #  Old Orchestration error handling
             if response_error.get('code') == 400:
                 raise QueueApiClientException(
                     f"{response_error.get('error')}. Exception code {response_error.get('code')}.\n"

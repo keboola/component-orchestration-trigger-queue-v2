@@ -1,172 +1,248 @@
 {
-  "type": "object",
-  "title": "Parameters",
-  "required": [
-    "#kbcToken",
-    "kbcUrl",
-    "orchestrationId",
-    "waitUntilFinish"
-  ],
-  "properties": {
-    "#kbcToken": {
-      "type": "string",
-      "title": "KBC Storage API token",
-      "format": "password",
-      "minLength": 1,
-      "propertyOrder": 10,
-      "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
-    },
-    "kbcUrl": {
-      "title": "KBC Stack",
-      "type": "string",
-      "enum": [
-        "",
-        "us-east4.gcp.",
-        "eu-central-1.",
-        "north-europe.azure.",
-        "europe-west3.gcp.",
-        "Custom Stack"
-      ],
-      "options": {
-        "enum_titles": [
-          "US Virginia AWS - connection.keboola.com",
-          "US Virginia GCP - connection.us-east4.gcp.keboola.com",
-          "EU Frankfurt AWS - connection.eu-central-1.keboola.com",
-          "EU Ireland Azure - connection.north-europe.azure.keboola.com",
-          "EU Frankfurt GCP - connection.europe-west3.gcp.keboola.com",
-          "Custom Stack"
-        ]
-      },
-      "propertyOrder": 20
-    },
-    "custom_stack": {
-      "title": "Custom Stack",
-      "type": "string",
-      "propertyOrder": 25,
-      "description": "The name of your stack in connection.{CUSTOM_STACK}.keboola.cloud",
-      "options": {
-        "dependencies": {
-          "kbcUrl": "Custom Stack"
-        }
-      }
-    },
-    "orchestrationId": {
-      "type": "string",
-      "title": "Orchestration ID",
-      "propertyOrder": 30,
-      "enum": [],
-      "format": "select",
-      "options": {
-        "async": {
-          "label": "Re-load orchestrations",
-          "action": "list_orchestrations"
-        }
-      },
-      "uniqueItems": true
-    },
-    "trigger_metadata": {
-      "type": "object",
-      "format": "grid-strict",
-      "title": "Trigger Info",
-      "options": {
-            "tooltip": "Display metadata about the trigger. You may optionally save the results in the configuration for better convenience."
-          },
-      "properties": {
-        "sync_trigger_metadata": {
-          "type": "button",
-          "format": "sync-action",
-          "options": {
-            "async": {
-              "label": "SHOW INFO",
-              "action": "sync_trigger_metadata"
-            }
-          },
-          "propertyOrder": 1
+    "type": "object",
+    "title": "Parameters",
+    "required": [
+        "waitUntilFinish",
+        "#kbcToken",
+        "kbcUrl",
+        "orchestrationId"
+    ],
+    "properties": {
+        "#kbcToken": {
+            "type": "string",
+            "title": "KBC Storage API token",
+            "format": "password",
+            "minLength": 1,
+            "propertyOrder": 10,
+            "description": "<a href=\"https://help.keboola.com/management/project/tokens/\">Keboola API Token</a> with full access to all buckets and components."
         },
-        "store_info": {
-          "title": "Store Metadata in configuration",
-          "type": "boolean",
-          "format": "checkbox",
-          "propertyOrder": 2,
-          "options": {
-            "grid_columns": 10,
-            "grid_break": true
-          }
+        "kbcUrl": {
+            "title": "KBC Stack",
+            "type": "string",
+            "enum": [
+                "-",
+                "us-east4.gcp.",
+                "eu-central-1.",
+                "north-europe.azure.",
+                "europe-west3.gcp.",
+                "Custom Stack"
+            ],
+            "options": {
+                "enum_titles": [
+                    "US Virginia AWS - connection.keboola.com",
+                    "US Virginia GCP - connection.us-east4.gcp.keboola.com",
+                    "EU Frankfurt AWS - connection.eu-central-1.keboola.com",
+                    "EU Ireland Azure - connection.north-europe.azure.keboola.com",
+                    "EU Frankfurt GCP - connection.europe-west3.gcp.keboola.com",
+                    "Custom Stack"
+                ]
+            },
+            "propertyOrder": 20
         },
-        "project_name": {
-          "title": "Project Name",
-          "type": "string",
-          "propertyOrder": 3,
-          "options": {
-            "grid_columns": 10,
-            "dependencies": {
-              "store_info": true
+        "custom_stack": {
+            "title": "Custom Stack",
+            "type": "string",
+            "propertyOrder": 25,
+            "description": "The name of your stack in connection.{CUSTOM_STACK}.keboola.cloud",
+            "options": {
+                "dependencies": {
+                    "kbcUrl": "Custom Stack"
+                }
             }
-          },
-          "enabled": false
         },
-        "project_id": {
-          "title": "Project ID",
-          "propertyOrder": 4,
-          "options": {
-            "grid_columns": 2,
-            "dependencies": {
-              "store_info": true
-            }
-          },
-          "type": "string"
+        "orchestrationId": {
+            "type": "integer",
+            "title": "Flow ID",
+            "propertyOrder": 30,
+            "enum": [],
+            "format": "select",
+            "options": {
+                "async": {
+                    "label": "RE-LOAD FLOWS",
+                    "action": "list_orchestrations"
+                }
+            },
+            "uniqueItems": true
         },
-        "orchestration_link": {
-          "title": "Orchestration link",
-          "type": "string",
-          "options": {
-            "grid_columns": 12,
-            "dependencies": {
-              "store_info": true
+        "variables": {
+            "type": "array",
+            "propertyOrder": 50,
+            "format": "table",
+            "title": "Variables of the flow",
+            "uniqueItems": true,
+            "items": {
+                "type": "object",
+                "title": "Variable",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
             }
-          },
-          "propertyOrder": 5
+        },
+        "waitUntilFinish": {
+            "type": "boolean",
+            "format": "checkbox",
+            "title": "Wait for job finish and check jobs status",
+            "default": false,
+            "propertyOrder": 60
+        },
+        "failOnWarning": {
+            "type": "boolean",
+            "format": "checkbox",
+            "title": "Fail on Warning",
+            "default": true,
+            "propertyOrder": 65,
+            "description": "When checked, the trigger job will fail when the flow ends with a warning",
+            "options": {
+                "dependencies": {
+                    "waitUntilFinish": true
+                }
+            }
+        },
+        "triggerActionOnFailure": {
+            "type": "boolean",
+            "format": "checkbox",
+            "title": "Trigger flow on failure",
+            "propertyOrder": 70,
+            "description": "Trigger flow when the orchestration fails.",
+            "options": {
+                "dependencies": {
+                    "waitUntilFinish": true
+                }
+            }
+        },
+        "actionOnFailureSettings": {
+            "type": "object",
+            "title": "Flow on failure settings",
+            "propertyOrder": 75,
+            "required": [
+              "failureConfigurationId"
+            ],
+            "properties": {
+                "targetProject": {
+                    "type": "string",
+                    "title": "Flow Location",
+                    "enum": [
+                        "current",
+                        "destination"
+                    ],
+                    "options": {
+                        "tooltip": "Current project settings triggers flow in the same project as this component. Destination project triggers flow in the project where the main flow is located.",
+                        "enum_titles": [
+                            "Current Project",
+                            "Destination Project"
+                        ]
+                    }
+                },
+                "failureConfigurationId": {
+                  "type": "integer",
+                  "title": "Flow ID",
+                  "enum": [],
+                  "format": "select",
+                  "options": {
+                      "async": {
+                          "label": "RE-LOAD FLOWS",
+                          "action": "list_failure_orchestrations"
+                      }
+                  },
+                  "description": "List of flows from selected project. Needs to refresh after changing the location settings.",
+                  "uniqueItems": true
+                },
+                "passVariables": {
+                    "type": "boolean",
+                    "format": "checkbox",
+                    "title": "Pass Main Flow Variables",
+                    "description": "Pass all variables from the main flow to this one. They will be processed along with the variables defined below."
+                },
+                "failureVariables": {
+                    "type": "array",
+                    "format": "table",
+                    "title": "Variables of the flow on failure",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "object",
+                        "title": "Variable",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "options": {
+                "dependencies": {
+                    "triggerActionOnFailure": true
+                }
+            }
+        },
+        "trigger_metadata": {
+            "type": "object",
+            "title": "Trigger Info",
+            "format": "grid-strict",
+            "properties": {
+                "project_id": {
+                  "type": "string",
+                  "title": "Project ID",
+                  "options": {
+                    "dependencies": {
+                      "store_info": true
+                    },
+                    "grid_columns": 2
+                  },
+                  "propertyOrder": 4
+                },
+                "store_info": {
+                  "type": "boolean",
+                  "title": "Store Metadata in configuration",
+                  "format": "checkbox",
+                  "options": {
+                    "grid_break": true,
+                    "grid_columns": 10
+                  },
+                  "propertyOrder": 2
+                },
+                "project_name": {
+                  "type": "string",
+                  "title": "Project Name",
+                  "enabled": false,
+                  "options": {
+                    "dependencies": {
+                      "store_info": true
+                    },
+                    "grid_columns": 10
+                  },
+                  "propertyOrder": 3
+                },
+                "orchestration_link": {
+                  "type": "string",
+                  "title": "Orchestration link",
+                  "options": {
+                    "dependencies": {
+                      "store_info": true
+                    },
+                    "grid_columns": 12
+                  },
+                  "propertyOrder": 5
+                },
+                "sync_trigger_metadata": {
+                    "type": "button",
+                    "format": "sync-action",
+                    "options": {
+                        "async": {
+                          "label": "SHOW INFO",
+                          "action": "sync_trigger_metadata"
+                        }
+                    }
+                }
+            }
         }
-      }
-    },
-    "waitUntilFinish": {
-      "type": "boolean",
-      "format": "checkbox",
-      "title": "Wait for job finish and check jobs status",
-      "default": false,
-      "propertyOrder": 40
-    },
-    "failOnWarning": {
-      "type": "boolean",
-      "format": "checkbox",
-      "title": "Fail on Warning",
-      "default": true,
-      "propertyOrder": 45,
-      "description": "When checked, the trigger job will fail when the orchestration ends with a warning",
-      "options": {
-        "dependencies": {
-          "waitUntilFinish": true
-        }
-      }
-    },
-    "variables": {
-      "type": "array",
-      "propertyOrder": 50,
-      "format": "table",
-      "title": "Variables",
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "title": "Variable",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        }
-      }
     }
-  }
 }
