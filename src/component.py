@@ -310,7 +310,7 @@ class Component(ComponentBase):
         return [
             SelectElement(
                 label="[%s] %s" % (c["id"], c["name"]),
-                value=str(c['id'])
+                value=str(c["id"])
             ) for c in configurations
         ]
 
@@ -321,7 +321,7 @@ class Component(ComponentBase):
         return [
             SelectElement(
                 label="[%s] %s" % (c["id"], c["name"]),
-                value=str(c['id'])
+                value=str(c["id"])
             ) for c in configurations
         ]
 
