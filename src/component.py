@@ -307,13 +307,23 @@ class Component(ComponentBase):
     def list_orchestration(self):
         self._init_clients()
         configurations = self._configurations_client.list(FLOW_COMPONENT_ID)
-        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=str(c['id'])) for c in configurations]
+        return [
+            SelectElement(
+                label="[%s] %s" % (c["id"], c["name"]),
+                value=str(c['id'])
+            ) for c in configurations
+        ]
 
     @sync_action('list_failure_orchestrations')
     def list_failure_orchestrations(self):
         self._init_clients()
         configurations = self._configurations_on_failure_client.list(FLOW_COMPONENT_ID)
-        return [SelectElement(label=f"[{c['id']}] {c['name']}", value=str(c['id'])) for c in configurations]
+        return [
+            SelectElement(
+                label="[%s] %s" % (c["id"], c["name"]),
+                value=str(c['id'])
+            ) for c in configurations
+        ]
 
     @sync_action('sync_trigger_metadata')
     def sync_trigger_metadata(self):
