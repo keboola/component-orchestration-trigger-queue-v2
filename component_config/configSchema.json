@@ -51,7 +51,7 @@
             }
         },
         "orchestrationId": {
-            "type": "integer",
+            "type": "string",
             "title": "Flow ID",
             "propertyOrder": 30,
             "enum": [],
@@ -139,7 +139,7 @@
                     }
                 },
                 "failureConfigurationId": {
-                  "type": "integer",
+                  "type": "string",
                   "title": "Flow ID",
                   "enum": [],
                   "format": "select",
