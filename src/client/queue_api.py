@@ -52,7 +52,9 @@ class QueueApiClient(HttpClient):
         is_finished = False
         while not is_finished:
             try:
-                is_finished = self.get(endpoint_path=f"jobs/{job_id}").get("isFinished")
+                job_detail = self.get(endpoint_path=f"jobs/{job_id}")
+                logging.debug(f"Job detail: {job_detail}")
+                is_finished = job_detail.get("isFinished")
             except HTTPError as http_err:
                 raise QueueApiClientException(http_err) from http_err
             time.sleep(10)
