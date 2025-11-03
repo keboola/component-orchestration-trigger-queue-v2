@@ -49,17 +49,18 @@ class QueueApiClient(HttpClient):
         return json.loads(response.text)
 
     def wait_until_job_finished(self, job_id: str) -> str:
+        job_detail = None
         is_finished = False
         while not is_finished:
             try:
-                is_finished = self.get(endpoint_path=f"jobs/{job_id}").get("isFinished")
+                job_detail = self.get(endpoint_path=f"jobs/{job_id}", timeout=10)
+                logging.debug(f"Job detail: {job_detail}")
+                is_finished = job_detail.get("isFinished")
             except HTTPError as http_err:
                 raise QueueApiClientException(http_err) from http_err
             time.sleep(10)
-        try:
-            return self.get(endpoint_path=f"jobs/{job_id}").get("status")
-        except HTTPError as http_err:
-            raise QueueApiClientException(http_err) from http_err
+
+        return job_detail.get("status")
 
     @staticmethod
     def _handle_http_error(response):
