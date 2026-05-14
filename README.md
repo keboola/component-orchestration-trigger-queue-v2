@@ -37,6 +37,17 @@ Configuration
  - **Fail on warning** (failOnWarning) – [OPT] If set to `true`, the component will fail when the orchestration ends with a warning.
 
 
+### Conditional Flows (keboola.flow) support
+
+The component automatically detects whether the configured ID belongs to a
+`keboola.flow` (Conditional Flow) configuration. If a non-disabled
+`keboola.flow` configuration with that ID exists in the target project, the
+component triggers it as `keboola.flow`. Otherwise (404 or `isDisabled = true`)
+it falls back to triggering `keboola.orchestrator`, preserving the previous
+behaviour. The same auto-detection applies to the optional failure-action
+configuration.
+
+
 Sample Configuration
 =============
 ```json

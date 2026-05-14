@@ -8,9 +8,10 @@ from keboola.component.exceptions import UserException
 from keboola.component.sync_actions import SelectElement, ValidationResult
 
 from client import QueueApiClient, QueueApiClientException
+from flow_resolver import resolve_component_id
 
 CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
-FLOW_COMPONENT_ID = "keboola.orchestrator"
+ORCHESTRATOR_COMPONENT_ID = "keboola.orchestrator"
 
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
@@ -80,9 +81,19 @@ class Component(ComponentBase):
         fail_on_warning = params.get(KEY_FAIL_ON_WARNING, True)
 
         try:
-            orchestration_run = self._runner_client.run_orchestration(orch_id, variables)
+            main_component_id = resolve_component_id(self._configurations_client, str(orch_id))
+            logging.info(f"Triggering configuration {orch_id} as {main_component_id}")
+            orchestration_run = self._runner_client.run_orchestration(
+                orch_id,
+                variables,
+                component_id=main_component_id,
+            )
         except QueueApiClientException as api_exc:
             raise UserException(api_exc) from api_exc
+        except requests.HTTPError as http_exc:
+            raise UserException(
+                f"Failed to resolve component type for configuration {orch_id}: {http_exc}"
+            ) from http_exc
 
         logging.info(f"Flow run started with job ID {orchestration_run.get('id')} and "
                      f"configuration ID {orch_id}")
@@ -112,9 +123,17 @@ class Component(ComponentBase):
                         variables_on_failure.extend(variables)
 
                     try:
+                        failure_component_id = resolve_component_id(
+                            self._configurations_on_failure_client,
+                            str(job_to_trigger),
+                        )
+                        logging.info(
+                            f"Triggering failure configuration {job_to_trigger} as {failure_component_id}"
+                        )
                         action_on_failure_run = self._failure_action_runner_client.run_orchestration(
                             job_to_trigger,
-                            variables_on_failure
+                            variables_on_failure,
+                            component_id=failure_component_id,
                         )
                         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
                         if project == "current":
@@ -149,6 +168,11 @@ class Component(ComponentBase):
                     except QueueApiClientException as api_exc:
                         raise UserException("Flow triggered on failure failed on: "
                                             f"{api_exc}") from api_exc
+                    except requests.HTTPError as http_exc:
+                        raise UserException(
+                            "Failed to resolve component type for failure configuration "
+                            f"{job_to_trigger}: {http_exc}"
+                        ) from http_exc
                 else:
                     logging.info("Flow is finished")
                     self.process_status(status, fail_on_warning)
@@ -306,7 +330,7 @@ class Component(ComponentBase):
     @sync_action('list_orchestrations')
     def list_orchestration(self):
         self._init_clients()
-        configurations = self._configurations_client.list(FLOW_COMPONENT_ID)
+        configurations = self._configurations_client.list(ORCHESTRATOR_COMPONENT_ID)
         return [
             SelectElement(
                 label="[%s] %s" % (c["id"], c["name"]),
@@ -317,7 +341,7 @@ class Component(ComponentBase):
     @sync_action('list_failure_orchestrations')
     def list_failure_orchestrations(self):
         self._init_clients()
-        configurations = self._configurations_on_failure_client.list(FLOW_COMPONENT_ID)
+        configurations = self._configurations_on_failure_client.list(ORCHESTRATOR_COMPONENT_ID)
         return [
             SelectElement(
                 label="[%s] %s" % (c["id"], c["name"]),
@@ -333,7 +357,7 @@ class Component(ComponentBase):
         flow_id = params.get(KEY_ORCHESTRATION_ID)
 
         flow_url = self._compose_flow_url(flow_id, self.stack_url, self._get_project_id())
-        flow_cfg = self._get_component_detail(self._configurations_client, FLOW_COMPONENT_ID, str(flow_id))
+        flow_cfg = self._get_component_detail(self._configurations_client, ORCHESTRATOR_COMPONENT_ID, str(flow_id))
 
         info_message = (f"This configuration triggers flow named [{flow_cfg['name']}]({flow_url}) "
                         f"in project `{self._get_project_id()}`.")
@@ -341,7 +365,7 @@ class Component(ComponentBase):
         if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
             flow_id_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
             flow_cfg_on_failure = self._get_component_detail(self._configurations_on_failure_client,
-                                                             FLOW_COMPONENT_ID,
+                                                             ORCHESTRATOR_COMPONENT_ID,
                                                              str(flow_id_on_failure))
 
             flow_url_on_failure = self._compose_flow_url(flow_id_on_failure, self.stack_url_on_failure,
