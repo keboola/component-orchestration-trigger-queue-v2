@@ -43,23 +43,30 @@ def list_triggerable_configurations(configurations_client: Any) -> List[Dict[str
     """
     Return a merged list of configurations this component can trigger.
 
-    Combines keboola.flow and keboola.orchestrator configurations from the project. When the
-    same configuration ID exists under both components, picks one entry per these rules:
+    Combines keboola.flow and keboola.orchestrator configurations from the project and picks
+    one entry per configuration ID using the same rules as ``resolve_component_id``:
 
     * keboola.flow exists and is not disabled -> keboola.flow
     * keboola.flow is disabled and keboola.orchestrator exists -> keboola.orchestrator
-    * only keboola.flow exists (enabled or disabled) -> keboola.flow
+    * only keboola.flow exists and is enabled -> keboola.flow
     * only keboola.orchestrator exists -> keboola.orchestrator
 
-    Each entry is a dict ``{"id": str, "name": str, "component_id": str}``. Results are sorted
-    by name (case-insensitive) for stable UI output.
+    A disabled keboola.flow with no orchestrator counterpart is skipped — the trigger path
+    would resolve it as keboola.orchestrator and fail with "config not found", so listing it
+    in the picker would be misleading.
+
+    Each entry is a dict ``{"id": str, "name": str, "component_id": str}``. Results are
+    grouped by component type (Conditional Flow first, then Flow) and sorted by name within
+    each group for stable UI output.
     """
     flows_by_id = {str(c["id"]): c for c in _safe_list(configurations_client, FLOW_COMPONENT_ID)}
     orchestrators_by_id = {str(c["id"]): c for c in _safe_list(configurations_client, ORCHESTRATOR_COMPONENT_ID)}
 
     merged: List[Dict[str, str]] = []
     for cfg_id in set(flows_by_id) | set(orchestrators_by_id):
-        merged.append(_pick_entry(cfg_id, flows_by_id.get(cfg_id), orchestrators_by_id.get(cfg_id)))
+        entry = _pick_entry(cfg_id, flows_by_id.get(cfg_id), orchestrators_by_id.get(cfg_id))
+        if entry is not None:
+            merged.append(entry)
 
     merged.sort(key=_sort_key)
     return merged
@@ -70,13 +77,13 @@ def _sort_key(entry: Dict[str, str]):
     return (is_orchestrator, entry["name"].lower())
 
 
-def _pick_entry(cfg_id: str, flow: Any, orchestrator: Any) -> Dict[str, str]:
+def _pick_entry(cfg_id: str, flow: Any, orchestrator: Any):
     if flow is not None and not flow.get("isDisabled"):
         return {"id": cfg_id, "name": flow["name"], "component_id": FLOW_COMPONENT_ID}
     if flow is not None and orchestrator is not None:
         return {"id": cfg_id, "name": orchestrator["name"], "component_id": ORCHESTRATOR_COMPONENT_ID}
     if flow is not None:
-        return {"id": cfg_id, "name": flow["name"], "component_id": FLOW_COMPONENT_ID}
+        return None
     return {"id": cfg_id, "name": orchestrator["name"], "component_id": ORCHESTRATOR_COMPONENT_ID}
 
 

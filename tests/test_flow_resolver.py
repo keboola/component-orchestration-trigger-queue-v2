@@ -85,9 +85,9 @@ class TestListTriggerableConfigurations(unittest.TestCase):
             [{"id": "111", "name": "Only Orch", "component_id": ORCHESTRATOR_COMPONENT_ID}],
         )
 
-    def test_lone_flow_is_listed_as_flow_even_when_disabled(self):
+    def test_lone_enabled_flow_is_listed_as_flow(self):
         client = _client_with_lists(
-            flows=[{"id": "222", "name": "Only Flow", "isDisabled": True}],
+            flows=[{"id": "222", "name": "Only Flow", "isDisabled": False}],
             orchestrators=[],
         )
 
@@ -97,6 +97,16 @@ class TestListTriggerableConfigurations(unittest.TestCase):
             result,
             [{"id": "222", "name": "Only Flow", "component_id": FLOW_COMPONENT_ID}],
         )
+
+    def test_lone_disabled_flow_is_hidden(self):
+        client = _client_with_lists(
+            flows=[{"id": "222", "name": "Only Disabled Flow", "isDisabled": True}],
+            orchestrators=[],
+        )
+
+        result = list_triggerable_configurations(client)
+
+        self.assertEqual(result, [])
 
     def test_same_id_enabled_flow_wins_over_orchestrator(self):
         client = _client_with_lists(
