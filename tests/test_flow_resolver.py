@@ -124,9 +124,12 @@ class TestListTriggerableConfigurations(unittest.TestCase):
             [{"id": "444", "name": "Orch Name", "component_id": ORCHESTRATOR_COMPONENT_ID}],
         )
 
-    def test_results_are_sorted_by_name_case_insensitive(self):
+    def test_results_are_grouped_by_type_then_sorted_by_name(self):
         client = _client_with_lists(
-            flows=[{"id": "1", "name": "zeta", "isDisabled": False}],
+            flows=[
+                {"id": "1", "name": "zeta", "isDisabled": False},
+                {"id": "4", "name": "Bravo", "isDisabled": False},
+            ],
             orchestrators=[
                 {"id": "2", "name": "Alpha", "isDisabled": False},
                 {"id": "3", "name": "beta", "isDisabled": False},
@@ -135,7 +138,15 @@ class TestListTriggerableConfigurations(unittest.TestCase):
 
         result = list_triggerable_configurations(client)
 
-        self.assertEqual([item["name"] for item in result], ["Alpha", "beta", "zeta"])
+        self.assertEqual(
+            [(item["component_id"], item["name"]) for item in result],
+            [
+                (FLOW_COMPONENT_ID, "Bravo"),
+                (FLOW_COMPONENT_ID, "zeta"),
+                (ORCHESTRATOR_COMPONENT_ID, "Alpha"),
+                (ORCHESTRATOR_COMPONENT_ID, "beta"),
+            ],
+        )
 
     def test_flow_list_404_is_treated_as_empty(self):
         client = mock.MagicMock()

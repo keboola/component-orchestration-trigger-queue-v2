@@ -61,8 +61,13 @@ def list_triggerable_configurations(configurations_client: Any) -> List[Dict[str
     for cfg_id in set(flows_by_id) | set(orchestrators_by_id):
         merged.append(_pick_entry(cfg_id, flows_by_id.get(cfg_id), orchestrators_by_id.get(cfg_id)))
 
-    merged.sort(key=lambda item: item["name"].lower())
+    merged.sort(key=_sort_key)
     return merged
+
+
+def _sort_key(entry: Dict[str, str]):
+    is_orchestrator = entry["component_id"] == ORCHESTRATOR_COMPONENT_ID
+    return (is_orchestrator, entry["name"].lower())
 
 
 def _pick_entry(cfg_id: str, flow: Any, orchestrator: Any) -> Dict[str, str]:
