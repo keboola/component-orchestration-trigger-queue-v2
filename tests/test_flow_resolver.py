@@ -6,8 +6,29 @@ import requests
 from flow_resolver import (
     FLOW_COMPONENT_ID,
     ORCHESTRATOR_COMPONENT_ID,
+    list_triggerable_configurations,
     resolve_component_id,
 )
+
+
+def _http_error(status_code: int) -> requests.HTTPError:
+    response = mock.MagicMock()
+    response.status_code = status_code
+    return requests.HTTPError(response=response)
+
+
+def _client_with_lists(flows, orchestrators):
+    client = mock.MagicMock()
+
+    def _list(component_id):
+        if component_id == FLOW_COMPONENT_ID:
+            return flows
+        if component_id == ORCHESTRATOR_COMPONENT_ID:
+            return orchestrators
+        raise AssertionError(f"Unexpected component_id: {component_id}")
+
+    client.list.side_effect = _list
+    return client
 
 
 class TestResolveComponentId(unittest.TestCase):
@@ -47,6 +68,98 @@ class TestResolveComponentId(unittest.TestCase):
 
         with self.assertRaises(requests.HTTPError):
             resolve_component_id(client, "123")
+
+
+class TestListTriggerableConfigurations(unittest.TestCase):
+
+    def test_lone_orchestrator_is_listed_as_orchestrator(self):
+        client = _client_with_lists(
+            flows=[],
+            orchestrators=[{"id": "111", "name": "Only Orch", "isDisabled": False}],
+        )
+
+        result = list_triggerable_configurations(client)
+
+        self.assertEqual(
+            result,
+            [{"id": "111", "name": "Only Orch", "component_id": ORCHESTRATOR_COMPONENT_ID}],
+        )
+
+    def test_lone_flow_is_listed_as_flow_even_when_disabled(self):
+        client = _client_with_lists(
+            flows=[{"id": "222", "name": "Only Flow", "isDisabled": True}],
+            orchestrators=[],
+        )
+
+        result = list_triggerable_configurations(client)
+
+        self.assertEqual(
+            result,
+            [{"id": "222", "name": "Only Flow", "component_id": FLOW_COMPONENT_ID}],
+        )
+
+    def test_same_id_enabled_flow_wins_over_orchestrator(self):
+        client = _client_with_lists(
+            flows=[{"id": "333", "name": "Flow Name", "isDisabled": False}],
+            orchestrators=[{"id": "333", "name": "Orch Name", "isDisabled": False}],
+        )
+
+        result = list_triggerable_configurations(client)
+
+        self.assertEqual(
+            result,
+            [{"id": "333", "name": "Flow Name", "component_id": FLOW_COMPONENT_ID}],
+        )
+
+    def test_same_id_disabled_flow_falls_back_to_orchestrator(self):
+        client = _client_with_lists(
+            flows=[{"id": "444", "name": "Flow Name", "isDisabled": True}],
+            orchestrators=[{"id": "444", "name": "Orch Name", "isDisabled": False}],
+        )
+
+        result = list_triggerable_configurations(client)
+
+        self.assertEqual(
+            result,
+            [{"id": "444", "name": "Orch Name", "component_id": ORCHESTRATOR_COMPONENT_ID}],
+        )
+
+    def test_results_are_sorted_by_name_case_insensitive(self):
+        client = _client_with_lists(
+            flows=[{"id": "1", "name": "zeta", "isDisabled": False}],
+            orchestrators=[
+                {"id": "2", "name": "Alpha", "isDisabled": False},
+                {"id": "3", "name": "beta", "isDisabled": False},
+            ],
+        )
+
+        result = list_triggerable_configurations(client)
+
+        self.assertEqual([item["name"] for item in result], ["Alpha", "beta", "zeta"])
+
+    def test_flow_list_404_is_treated_as_empty(self):
+        client = mock.MagicMock()
+
+        def _list(component_id):
+            if component_id == FLOW_COMPONENT_ID:
+                raise _http_error(404)
+            return [{"id": "555", "name": "Orch", "isDisabled": False}]
+
+        client.list.side_effect = _list
+
+        result = list_triggerable_configurations(client)
+
+        self.assertEqual(
+            result,
+            [{"id": "555", "name": "Orch", "component_id": ORCHESTRATOR_COMPONENT_ID}],
+        )
+
+    def test_non_404_list_error_is_propagated(self):
+        client = mock.MagicMock()
+        client.list.side_effect = _http_error(500)
+
+        with self.assertRaises(requests.HTTPError):
+            list_triggerable_configurations(client)
 
 
 if __name__ == "__main__":
