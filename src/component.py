@@ -8,9 +8,16 @@ from keboola.component.exceptions import UserException
 from keboola.component.sync_actions import SelectElement, ValidationResult
 
 from client import QueueApiClient, QueueApiClientException
+from flow_resolver import (
+    FLOW_COMPONENT_ID,
+    list_triggerable_configurations,
+    resolve_component_id,
+)
 
 CURRENT_COMPONENT_ID = 'kds-team.app-orchestration-trigger-queue-v2'
-FLOW_COMPONENT_ID = "keboola.orchestrator"
+
+ORCHESTRATOR_UI_LABEL = "Flow"
+FLOW_UI_LABEL = "Conditional Flow"
 
 KEY_SAPI_TOKEN = '#kbcToken'
 KEY_STACK = 'kbcUrl'
@@ -55,6 +62,12 @@ def check_variables(variables) -> None:
                             "Please provide a valid name or remove the variable row.")
 
 
+def _ui_label_for_component(component_id: str) -> str:
+    if component_id == FLOW_COMPONENT_ID:
+        return FLOW_UI_LABEL
+    return ORCHESTRATOR_UI_LABEL
+
+
 class Component(ComponentBase):
 
     def __init__(self):
@@ -80,9 +93,19 @@ class Component(ComponentBase):
         fail_on_warning = params.get(KEY_FAIL_ON_WARNING, True)
 
         try:
-            orchestration_run = self._runner_client.run_orchestration(orch_id, variables)
+            main_component_id = resolve_component_id(self._configurations_client, str(orch_id))
+            logging.info(f"Triggering configuration {orch_id} as {main_component_id}")
+            orchestration_run = self._runner_client.run_orchestration(
+                orch_id,
+                variables,
+                component_id=main_component_id,
+            )
         except QueueApiClientException as api_exc:
             raise UserException(api_exc) from api_exc
+        except requests.HTTPError as http_exc:
+            raise UserException(
+                f"Failed to resolve component type for configuration {orch_id}: {http_exc}"
+            ) from http_exc
 
         logging.info(f"Flow run started with job ID {orchestration_run.get('id')} and "
                      f"configuration ID {orch_id}")
@@ -112,9 +135,17 @@ class Component(ComponentBase):
                         variables_on_failure.extend(variables)
 
                     try:
+                        failure_component_id = resolve_component_id(
+                            self._configurations_on_failure_client,
+                            str(job_to_trigger),
+                        )
+                        logging.info(
+                            f"Triggering failure configuration {job_to_trigger} as {failure_component_id}"
+                        )
                         action_on_failure_run = self._failure_action_runner_client.run_orchestration(
                             job_to_trigger,
-                            variables_on_failure
+                            variables_on_failure,
+                            component_id=failure_component_id,
                         )
                         project = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_TARGET_PROJECT)
                         if project == "current":
@@ -149,6 +180,11 @@ class Component(ComponentBase):
                     except QueueApiClientException as api_exc:
                         raise UserException("Flow triggered on failure failed on: "
                                             f"{api_exc}") from api_exc
+                    except requests.HTTPError as http_exc:
+                        raise UserException(
+                            "Failed to resolve component type for failure configuration "
+                            f"{job_to_trigger}: {http_exc}"
+                        ) from http_exc
                 else:
                     logging.info("Flow is finished")
                     self.process_status(status, fail_on_warning)
@@ -306,23 +342,21 @@ class Component(ComponentBase):
     @sync_action('list_orchestrations')
     def list_orchestration(self):
         self._init_clients()
-        configurations = self._configurations_client.list(FLOW_COMPONENT_ID)
-        return [
-            SelectElement(
-                label="[%s] %s" % (c["id"], c["name"]),
-                value=str(c["id"])
-            ) for c in configurations
-        ]
+        return self._triggerable_select_elements(self._configurations_client)
 
     @sync_action('list_failure_orchestrations')
     def list_failure_orchestrations(self):
         self._init_clients()
-        configurations = self._configurations_on_failure_client.list(FLOW_COMPONENT_ID)
+        return self._triggerable_select_elements(self._configurations_on_failure_client)
+
+    @staticmethod
+    def _triggerable_select_elements(configurations_client: Configurations) -> List[SelectElement]:
         return [
             SelectElement(
-                label="[%s] %s" % (c["id"], c["name"]),
-                value=str(c["id"])
-            ) for c in configurations
+                label='[%s "%s"] %s' % (_ui_label_for_component(entry["component_id"]), entry["id"], entry["name"]),
+                value=entry["id"],
+            )
+            for entry in list_triggerable_configurations(configurations_client)
         ]
 
     @sync_action('sync_trigger_metadata')
@@ -332,23 +366,31 @@ class Component(ComponentBase):
         self._init_clients()
         flow_id = params.get(KEY_ORCHESTRATION_ID)
 
-        flow_url = self._compose_flow_url(flow_id, self.stack_url, self._get_project_id())
-        flow_cfg = self._get_component_detail(self._configurations_client, FLOW_COMPONENT_ID, str(flow_id))
-
-        info_message = (f"This configuration triggers flow named [{flow_cfg['name']}]({flow_url}) "
-                        f"in project `{self._get_project_id()}`.")
+        info_message = self._format_trigger_info(
+            self._configurations_client,
+            flow_id,
+            self.stack_url,
+            self._get_project_id(),
+            prefix="This configuration triggers",
+        )
 
         if params.get(KEY_TRIGGER_ACTION_ON_FAILURE, False):
             flow_id_on_failure = params.get(KEY_ACTION_ON_FAILURE_SETTINGS, {}).get(KEY_CONFIGURATION_ID_ON_FAILURE)
-            flow_cfg_on_failure = self._get_component_detail(self._configurations_on_failure_client,
-                                                             FLOW_COMPONENT_ID,
-                                                             str(flow_id_on_failure))
-
-            flow_url_on_failure = self._compose_flow_url(flow_id_on_failure, self.stack_url_on_failure,
-                                                         self._target_project_on_failure)
-            info_message += (f" If the flow fails, it will trigger flow [{flow_cfg_on_failure['name']}]"
-                             f"({flow_url_on_failure}) in project `{self._target_project_on_failure}`.")
+            info_message += " " + self._format_trigger_info(
+                self._configurations_on_failure_client,
+                flow_id_on_failure,
+                self.stack_url_on_failure,
+                self._target_project_on_failure,
+                prefix="If it fails, it will trigger",
+            )
         return ValidationResult(info_message)
+
+    def _format_trigger_info(self, client: Configurations, configuration_id, stack_url, project_id, prefix: str) -> str:
+        component_id = resolve_component_id(client, str(configuration_id))
+        cfg = self._get_component_detail(client, component_id, str(configuration_id))
+        url = self._compose_flow_url(configuration_id, stack_url, project_id)
+        ui_label = _ui_label_for_component(component_id)
+        return f"{prefix} {ui_label} named [{cfg['name']}]({url}) in project `{project_id}`."
 
     @staticmethod
     def _get_component_detail(client: Configurations, component_id: str, configuration_id: str):

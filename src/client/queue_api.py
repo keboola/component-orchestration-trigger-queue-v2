@@ -36,8 +36,13 @@ class QueueApiClient(HttpClient):
         logging.debug(f"Using stack URL: {stack_url}")
         return stack_url
 
-    def run_orchestration(self, orch_id: str, variables: Optional[List[Dict]]) -> Dict:
-        data = {"component": "keboola.orchestrator",
+    def run_orchestration(
+        self,
+        orch_id: str,
+        variables: Optional[List[Dict]],
+        component_id: str = "keboola.orchestrator",
+    ) -> Dict:
+        data = {"component": component_id,
                 "mode": "run",
                 "config": orch_id}
         if variables:
