@@ -31,6 +31,18 @@ def _client_with_lists(flows, orchestrators):
     return client
 
 
+def _client_with_flow_list_error(status_code, orchestrators):
+    client = mock.MagicMock()
+
+    def _list(component_id):
+        if component_id == FLOW_COMPONENT_ID:
+            raise _http_error(status_code)
+        return orchestrators
+
+    client.list.side_effect = _list
+    return client
+
+
 class TestResolveComponentId(unittest.TestCase):
 
     def test_returns_flow_when_enabled_flow_config_exists(self):
@@ -52,19 +64,23 @@ class TestResolveComponentId(unittest.TestCase):
 
     def test_returns_orchestrator_when_flow_config_does_not_exist(self):
         client = mock.MagicMock()
-        response = mock.MagicMock()
-        response.status_code = 404
-        client.detail.side_effect = requests.HTTPError(response=response)
+        client.detail.side_effect = _http_error(404)
 
         result = resolve_component_id(client, "123")
 
         self.assertEqual(result, ORCHESTRATOR_COMPONENT_ID)
 
-    def test_reraises_non_404_http_errors(self):
+    def test_returns_orchestrator_when_flow_component_is_forbidden(self):
         client = mock.MagicMock()
-        response = mock.MagicMock()
-        response.status_code = 500
-        client.detail.side_effect = requests.HTTPError("boom", response=response)
+        client.detail.side_effect = _http_error(403)
+
+        result = resolve_component_id(client, "123")
+
+        self.assertEqual(result, ORCHESTRATOR_COMPONENT_ID)
+
+    def test_reraises_other_http_errors(self):
+        client = mock.MagicMock()
+        client.detail.side_effect = _http_error(500)
 
         with self.assertRaises(requests.HTTPError):
             resolve_component_id(client, "123")
@@ -159,23 +175,26 @@ class TestListTriggerableConfigurations(unittest.TestCase):
         )
 
     def test_flow_list_404_is_treated_as_empty(self):
-        client = mock.MagicMock()
-
-        def _list(component_id):
-            if component_id == FLOW_COMPONENT_ID:
-                raise _http_error(404)
-            return [{"id": "555", "name": "Orch", "isDisabled": False}]
-
-        client.list.side_effect = _list
-
-        result = list_triggerable_configurations(client)
+        result = list_triggerable_configurations(
+            _client_with_flow_list_error(404, orchestrators=[{"id": "555", "name": "Orch", "isDisabled": False}])
+        )
 
         self.assertEqual(
             result,
             [{"id": "555", "name": "Orch", "component_id": ORCHESTRATOR_COMPONENT_ID}],
         )
 
-    def test_non_404_list_error_is_propagated(self):
+    def test_flow_list_403_is_treated_as_empty(self):
+        result = list_triggerable_configurations(
+            _client_with_flow_list_error(403, orchestrators=[{"id": "555", "name": "Orch", "isDisabled": False}])
+        )
+
+        self.assertEqual(
+            result,
+            [{"id": "555", "name": "Orch", "component_id": ORCHESTRATOR_COMPONENT_ID}],
+        )
+
+    def test_other_list_errors_are_propagated(self):
         client = mock.MagicMock()
         client.list.side_effect = _http_error(500)
 

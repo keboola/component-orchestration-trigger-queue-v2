@@ -7,23 +7,28 @@ import requests
 FLOW_COMPONENT_ID = "keboola.flow"
 ORCHESTRATOR_COMPONENT_ID = "keboola.orchestrator"
 
+FLOW_UNAVAILABLE_STATUS_CODES = (403, 404)
+
 
 def resolve_component_id(configurations_client: Any, configuration_id: str) -> str:
     """
     Return FLOW_COMPONENT_ID if a non-disabled keboola.flow configuration with the given ID
     exists on the project the client points to; otherwise return ORCHESTRATOR_COMPONENT_ID.
 
-    Falls back to ORCHESTRATOR_COMPONENT_ID on HTTP 404 (no migrated flow exists) and when the
-    flow configuration is disabled. Re-raises any other HTTP error so unexpected failures are
-    not silently downgraded.
+    Falls back to ORCHESTRATOR_COMPONENT_ID when the flow configuration is disabled or when
+    Storage API indicates that keboola.flow is not available for the caller — HTTP 404
+    (no migrated flow exists) or HTTP 403 (the component is not enabled / the token has no
+    access on this project). Re-raises any other HTTP error so unexpected failures are not
+    silently downgraded.
     """
     try:
         config = configurations_client.detail(FLOW_COMPONENT_ID, configuration_id)
     except requests.HTTPError as exc:
-        if exc.response is not None and exc.response.status_code == 404:
+        if _is_flow_unavailable(exc):
             logging.debug(
-                "No keboola.flow config for id=%s (404); falling back to keboola.orchestrator",
+                "keboola.flow not available for id=%s (HTTP %s); falling back to keboola.orchestrator",
                 configuration_id,
+                _status_code(exc),
             )
             return ORCHESTRATOR_COMPONENT_ID
         raise
@@ -88,11 +93,28 @@ def _pick_entry(cfg_id: str, flow: Any, orchestrator: Any):
 
 
 def _safe_list(configurations_client: Any, component_id: str) -> List[Dict]:
-    """List configurations of a component. Treats HTTP 404 as an empty list."""
+    """
+    List configurations of a component.
+
+    Treats HTTP 404 (component missing) and HTTP 403 (component not enabled / no access) as
+    an empty list so the picker still works on projects where keboola.flow is not available.
+    """
     try:
         return configurations_client.list(component_id)
     except requests.HTTPError as exc:
-        if exc.response is not None and exc.response.status_code == 404:
-            logging.debug("Listing %s returned 404; treating as empty", component_id)
+        if _is_flow_unavailable(exc):
+            logging.debug(
+                "Listing %s returned HTTP %s; treating as empty",
+                component_id,
+                _status_code(exc),
+            )
             return []
         raise
+
+
+def _is_flow_unavailable(exc: requests.HTTPError) -> bool:
+    return exc.response is not None and exc.response.status_code in FLOW_UNAVAILABLE_STATUS_CODES
+
+
+def _status_code(exc: requests.HTTPError) -> str:
+    return str(exc.response.status_code) if exc.response is not None else "?"
