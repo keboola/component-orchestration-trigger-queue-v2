@@ -51,7 +51,13 @@ class QueueApiClient(HttpClient):
 
         response = self.post_raw(endpoint_path="jobs", headers=header, data=json.dumps(data))  # noqa
         self._handle_http_error(response)
-        return json.loads(response.text)
+        try:
+            return json.loads(response.text)
+        except json.JSONDecodeError as e:
+            raise QueueApiClientException(
+                f"Queue API returned a non-JSON response (HTTP {response.status_code}) "
+                f"when triggering the job: {response.text[:200]!r}"
+            ) from e
 
     def wait_until_job_finished(self, job_id: str) -> str:
         job_detail = None
@@ -72,7 +78,13 @@ class QueueApiClient(HttpClient):
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
-            response_error = json.loads(e.response.text)
+            try:
+                response_error = json.loads(e.response.text)
+            except json.JSONDecodeError:
+                raise QueueApiClientException(
+                    f"Queue API request failed with HTTP {e.response.status_code} "
+                    f"and a non-JSON error body: {e.response.text[:200]!r}"
+                ) from e
             #  Old Orchestration error handling
             if response_error.get('code') == 400:
                 raise QueueApiClientException(
