@@ -2,7 +2,9 @@ import json
 import unittest
 from unittest import mock
 
-from client import QueueApiClient
+import requests
+
+from client import QueueApiClient, QueueApiClientException
 
 
 def _make_response(status_code=200, text='{"id":"job-1"}'):
@@ -35,6 +37,30 @@ class TestRunOrchestration(unittest.TestCase):
 
         payload = json.loads(post_raw.call_args.kwargs["data"])
         self.assertEqual(payload["component"], "keboola.flow")
+
+    def test_empty_success_body_raises_queue_exception(self):
+        # A 2xx response with an empty/non-JSON body must surface as a legible
+        # QueueApiClientException instead of an uncaught json.JSONDecodeError.
+        client = self._build_client()
+        empty = _make_response(status_code=200, text="")
+        with mock.patch.object(client, "post_raw", return_value=empty):
+            with self.assertRaises(QueueApiClientException):
+                client.run_orchestration("123", variables=None)
+
+    def test_non_json_error_body_raises_queue_exception(self):
+        # An HTTP error whose body is not JSON (e.g. an HTML gateway 502 page) must
+        # surface as a QueueApiClientException, not an uncaught json.JSONDecodeError.
+        client = self._build_client()
+        error_response = mock.MagicMock()
+        error_response.status_code = 502
+        error_response.text = "<html><body>502 Bad Gateway</body></html>"
+        response = mock.MagicMock()
+        response.status_code = 502
+        response.text = "<html><body>502 Bad Gateway</body></html>"
+        response.raise_for_status.side_effect = requests.HTTPError(response=error_response)
+        with mock.patch.object(client, "post_raw", return_value=response):
+            with self.assertRaises(QueueApiClientException):
+                client.run_orchestration("123", variables=None)
 
 
 if __name__ == "__main__":
