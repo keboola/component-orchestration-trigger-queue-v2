@@ -12,6 +12,7 @@ from requests.packages.urllib3.util.retry import Retry
 QUEUE_V2_URL = "https://queue.{STACK}keboola.com"
 CLOUD_URL = "https://queue.{STACK}.keboola.cloud"
 TOKENS_URL = "https://connection.keboola.com/v2/storage/tokens/verify"
+MAX_CONSECUTIVE_POLL_FAILURES = 5
 
 
 class QueueApiClientException(Exception):
@@ -62,13 +63,25 @@ class QueueApiClient(HttpClient):
     def wait_until_job_finished(self, job_id: str) -> str:
         job_detail = None
         is_finished = False
+        consecutive_poll_failures = 0
         while not is_finished:
             try:
                 job_detail = self.get(endpoint_path=f"jobs/{job_id}", timeout=10)
                 logging.debug(f"Job detail: {job_detail}")
                 is_finished = job_detail.get("isFinished")
+                consecutive_poll_failures = 0
             except HTTPError as http_err:
                 raise QueueApiClientException(http_err) from http_err
+            except (requests.ConnectionError, requests.Timeout) as transient_err:
+                # A single network blip while polling a long-running job must not kill the
+                # wait. Retry a bounded number of consecutive times, then re-raise unchanged.
+                consecutive_poll_failures += 1
+                if consecutive_poll_failures > MAX_CONSECUTIVE_POLL_FAILURES:
+                    raise
+                logging.warning(
+                    f"Transient error while polling job {job_id} status ({transient_err}), "
+                    f"retry {consecutive_poll_failures}/{MAX_CONSECUTIVE_POLL_FAILURES}"
+                )
             time.sleep(10)
 
         return job_detail.get("status")
